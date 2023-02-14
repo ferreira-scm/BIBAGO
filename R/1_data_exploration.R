@@ -1,4 +1,8 @@
-# loading datasets
+library("mice")
+library(vegan)
+library(VIM)
+
+                                        # loading datasets
 lat.df <- read.csv("data/laterality_dataset.csv")
 per.df <- read.csv("data/personality_dataset.csv")
 
@@ -9,21 +13,11 @@ per.df$PVC_Nr[which(!unique(lat.df$PVC_Nr)%in%unique(per.df$PVC_Nr))]# these pig
 
 new_perso <- per.df[,c("chew_dur", "chew_freq", "expl_wob_freq", "expl_wob_dur", "freez_dur", "freez_freq", "BIBAGO_inter_voc_dur", "BIBAGO_voc_freq", "expl_wob_lat", "no_expl_wob_dur", "no_expl_wob_freq", "wob_open")]
 
-names(new_perso)
-
-names(per.df)
-
-nrow(lat.df)
-
-nrow(per.df)
-
-library(vegan)
-
-lat.df
+latI <- lat.df
+perI <- per.df
 
 ### First we need to imput
 
-library("mice")
 # checking the missing data per variable and per sample
 pMiss <- function(x){sum(is.na(x))/length(x)*100}
 apply(latI,2,pMiss) # few variables have 6% misssing data.
@@ -36,8 +30,6 @@ mice::md.pattern(latI)
 
 mice::md.pattern(perI)
 
-library(VIM)
-
 pdf("fig/Missing_val_Lat.pdf")
 aggr(latI, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, labels=names(latI), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"))
 dev.off()
@@ -49,9 +41,9 @@ dev.off()
 perI[,c("expl_dur", "expl_freq")] <- NULL
 
 
-latI_temp <- mice(latI,m=5,maxit=50,meth='pmm',seed=500, seed=1234)
+latI_temp <- mice(latI,m=5,maxit=50,meth='pmm',seed=500)
 summary(latI)
-PerI_temp <- mice(perI,m=5,maxit=50,meth='pmm',seed=500, seed=1234)
+PerI_temp <- mice(perI,m=5,maxit=50,meth='pmm',seed=500)
 summary(latI)
 
 
