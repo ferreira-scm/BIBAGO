@@ -5,6 +5,8 @@ library(bootnet)
 
 library(mgm)
 
+install.packages("GUniFrac")
+
 net.df <- perI
 
 net.df <- net.df[net.df$Test_Nr==1,]
@@ -84,12 +86,12 @@ edgew <- E(net.grph)$weight
 
 E(net.grph)$weight <- abs(E(net.grph)$weight)
 
-
+names(V(net.grph))
 
 
 V(net.grph)$Test <- c("OFT","OFT", "OFT", "OFT", "NOT", "NOT", "NOT", "NOT", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "HAT", "HAT","HAT","HAT","HAT","HAT","HAT")
 
-V(net.grph)$Dimension <- c("Boldness","Activity","Activity", "Sociability", "Exploration", "Exploration", "Boldness", "Boldness", "Reward", "Reward", "Reward", "Reward", "Punish", "Punish", "Punish", "Reward", "Punish", "Reward", "Sociability/Exploration", "Sociability/Exploration", "Boldness", "Sociability/Boldness", "", "", "Sociability/Exploration")
+V(net.grph)$Dimension <- c("Boldness","Activity","Activity", "Sociability", "Exploration", "Exploration", "Boldness", "Boldness", "BAS", "BAS", "BAS", "BAS", "BIS", "BIS", "BIS", "BAS", "BIS", "BAS", "Exploration", "Exploration", "Boldness", "Boldness", "", "", "Exploration")
                       
 
 E.color.Uni = edgew
@@ -106,19 +108,19 @@ unique(V(net.grph)$Dimension)
 
 V(net.grph)$color <- "white"
 V(net.grph)$color[which(V(net.grph)$Dimension=="Boldness")] <- "deeppink3"
-V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability/Boldness")] <- "deeppink4"
+#V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability/Boldness")] <- "deeppink4"
 V(net.grph)$color[which(V(net.grph)$Dimension=="Activity")] <- "darkolivegreen"
 V(net.grph)$color[which(V(net.grph)$Dimension=="Exploration")] <- "darkorange"
 V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability")] <- "darkolivegreen1"
-V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability/Exploration")] <- "darkkhaki"
-V(net.grph)$color[which(V(net.grph)$Dimension=="Reward")] <- "darkgoldenrod1"
-V(net.grph)$color[which(V(net.grph)$Dimension=="Punish")] <- "darkslategray"
+#V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability/Exploration")] <- "darkkhaki"
+V(net.grph)$color[which(V(net.grph)$Dimension=="BAS")] <- "darkgoldenrod1"
+V(net.grph)$color[which(V(net.grph)$Dimension=="BIS")] <- "darkslategray"
 
 levels(as.factor(V(net.grph)$Dimension))
 
 levels(as.factor(V(net.grph)$color))
 
-col <- c("white","darkolivegreen", "deeppink3", "darkorange", "darkgoldenrod1",  "darkslategray", "darkolivegreen1", "deeppink4", "darkkhaki")
+col <- c("white","darkolivegreen", "darkgoldenrod1",  "darkslategray", "deeppink3", "darkorange", "darkolivegreen1")
 
 pdf("fig/Network_tests.pdf",
                 width =8, height = 8)
@@ -128,7 +130,16 @@ plot(net.grph, layout=layout.fruchterman.reingold,
      vertex.label=V(net.grph)$Test)
 legend(x=0.5, y=1.2, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
 dev.off()
-     
+
+pdf("fig/Network_tests_label.pdf",
+                width =8, height = 8)
+set.seed(123)
+plot(net.grph, layout=layout.fruchterman.reingold,
+     vertex.label.color="black")
+#     vertex.label=V(net.grph)$Test)
+legend(x=0.5, y=1.2, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
+dev.off()
+
      vertex.label=
 
 plot(results.2,

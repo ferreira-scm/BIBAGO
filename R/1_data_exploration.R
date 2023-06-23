@@ -199,6 +199,10 @@ adonis2(hat_dis~
         by="margin") # no difference of test?
 
 
+sd <- as.data.frame(model1$fit)
+
+summary(sd$b_not)
+
 
 ### let's see if we have the same results for euclidean distances (pca)
 bib_eu <- vegdist(Perso_BIBAGO, method="euclidean")
@@ -277,6 +281,27 @@ fit_w <- brm(LI_w~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIB
              iter=6000)
 
 fit_w
+
+fit_t <- brm(LI_t~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq+
+                 (1|PVC_Nr),
+             data = df,
+             chains = 4,
+             cores = 4,
+             warmup=1000,
+             iter=6000)
+
+
+fit_f <- brm(LI_f~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq+
+                 (1|PVC_Nr),
+             data = df,
+             chains = 4,
+             cores = 4,
+             warmup=1000,
+             iter=6000)
+
+
+fit_t
+
 
 names(alldf)
 
@@ -434,7 +459,11 @@ saveRDS(model1, "tmp/BRMmodel1.rds")
 
 model1 <- readRDS("tmp/BRMmodel1.rds")
 
+model1
+
 conditional_effects(model1)
+
+bayes_R2(model1)
 
 ##### OK now 
 ############################# network
