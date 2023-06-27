@@ -209,7 +209,7 @@ bib_mds <- ggplot(bib_clr, aes(x=PCoA1, y=PCoA2, fill=Time))+
     scale_fill_manual(values = time_palette) +
     theme_bw(base_size=12)+
     theme(
-        legend.position = "right",
+        legend.position = "none",
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.line = element_line(color = "black"),
@@ -229,7 +229,7 @@ not_mds <- ggplot(Perso_NOT, aes(x=PCoA1, y=PCoA2, fill=Time))+
     scale_fill_manual(values = time_palette) +
     theme_bw(base_size=12)+
     theme(
-        legend.position = "right",
+        legend.position = "none",
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.line = element_line(color = "black"),
@@ -249,7 +249,7 @@ oft_mds <- ggplot(Perso_OFT, aes(x=PCoA1, y=PCoA2, fill=Time))+
     scale_fill_manual(values = time_palette) +
     theme_bw(base_size=12)+
     theme(
-        legend.position = "right",
+        legend.position = "none",
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.line = element_line(color = "black"),
@@ -268,7 +268,7 @@ hat_mds <- ggplot(Perso_HAT, aes(x=PCoA1, y=PCoA2, fill=Time))+
     scale_fill_manual(values = time_palette) +
     theme_bw(base_size=12)+
     theme(
-        legend.position = "right",
+        legend.position = "none",
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.line = element_line(color = "black"),
@@ -284,7 +284,11 @@ library(cowplot)
 
 Figure1 <- plot_grid(bib_mds, not_mds, hat_mds, oft_mds, labels="auto", nrow=2)
 
-ggsave(Figure1, "fig/Figure1.pdf", width = 170, height = 170, dpi = 300, units="mm")
+legend <- get_legend(bib_mds+  theme(legend.position="top"))
+
+Figure1 <- plot_grid(legend, Figure1, nrow=2,  rel_heights=c(0.05,1))
+
+ggsave("fig/Figure1.pdf", Figure1, width = 170, height = 170, dpi = 300, units="mm")
 
 bib_NMDS <- metaMDS(bib_dis, method="bray", k=2, trymax=500)
 not_NMDS <- metaMDS(not_dis, method="bray", k=2, trymax=500)
