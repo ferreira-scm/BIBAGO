@@ -5,33 +5,25 @@ library(bootnet)
 
 library(mgm)
 
-install.packages("GUniFrac")
 
-net.df <- perI
+source("R/1_data_exploration.R")
 
-net.df <- net.df[net.df$Test_Nr==1,]
+net.df <- perA
 
-#latI <- latI[,!names(latI)%in%c("Subject", "Batch", "Sow")]
-
-#net.df <- merge(net.df, latI, by="PVC_Nr")
 
 names(net.df)
 
-net.df$Subject <- NULL
-net.df$Test_Nr <- NULL
 
 #net.df$bias_w <- NULL
 #net.df$bias_f <- NULL
 #net.df$bias_t <- NULL
 
-key <- net.df$PVC_Nr
-
-net.df$PVC_Nr <- NULL
-
-#str(net.df)
-
 net.df$Batch <- NULL
 net.df$Sow <- NULL
+
+id <- net.df$Group.1
+net.df$Group.1 <- NULL
+
 
 ############ first a simple network
 
@@ -60,11 +52,7 @@ class(results.2)
 
 names(net.df)
 
-str(results.2)
-
 library(igraph)
-
-
 
 plot(results.5,
      label.cex=2)
@@ -86,66 +74,94 @@ edgew <- E(net.grph)$weight
 
 E(net.grph)$weight <- abs(E(net.grph)$weight)
 
-names(V(net.grph))
 
+l <- labels[which(labels$Label%in%names(V(net.grph))),]
 
-V(net.grph)$Test <- c("OFT","OFT", "OFT", "OFT", "NOT", "NOT", "NOT", "NOT", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "BIBAGO", "HAT", "HAT","HAT","HAT","HAT","HAT","HAT")
+all(l$Label==names(V(net.grph)))
 
-V(net.grph)$Dimension <- c("Boldness","Activity","Activity", "Sociability", "Exploration", "Exploration", "Boldness", "Boldness", "BAS", "BAS", "BAS", "BAS", "BIS", "BIS", "BIS", "BAS", "BIS", "BAS", "Exploration", "Exploration", "Boldness", "Boldness", "", "", "Exploration")
-                      
+# reordering
+l <- l[match(names(V(net.grph)), l$Label),]
+all(l$Label==names(V(net.grph)))# santiy check
+
+# adding test and dimension
+V(net.grph)$Test <- l$Test_name[match(names(V(net.grph)), l$Label)]
+V(net.grph)$Dimension <- l$Hypothesis.dimension[match(names(V(net.grph)), l$Label)]
 
 E.color.Uni = edgew
-E.color.Uni = ifelse(E.color.Uni>0, "chartreuse4",ifelse(E.color.Uni<0, "coral","grey"))
+E.color.Uni = ifelse(E.color.Uni>0, "#488f31",ifelse(E.color.Uni<0, "#de425b","grey"))
 E(net.grph)$color = as.character(E.color.Uni)
 
-
 V(net.grph)$Test
+
+l[match(names(V(net.grph)), l$Label),c(3,4)]
 
                                         #change edge width
 E(net.grph)$width = abs(edgew)*20
 
+V(net.grph)$Dimension
+
+names(V(net.grph))
+
+
 unique(V(net.grph)$Dimension)
 
 V(net.grph)$color <- "white"
-V(net.grph)$color[which(V(net.grph)$Dimension=="Boldness")] <- "deeppink3"
-#V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability/Boldness")] <- "deeppink4"
-V(net.grph)$color[which(V(net.grph)$Dimension=="Activity")] <- "darkolivegreen"
-V(net.grph)$color[which(V(net.grph)$Dimension=="Exploration")] <- "darkorange"
-V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability")] <- "darkolivegreen1"
-#V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability/Exploration")] <- "darkkhaki"
-V(net.grph)$color[which(V(net.grph)$Dimension=="BAS")] <- "darkgoldenrod1"
-V(net.grph)$color[which(V(net.grph)$Dimension=="BIS")] <- "darkslategray"
+V(net.grph)$color[which(V(net.grph)$Dimension=="Activity")] <- "#99D3CF"
+V(net.grph)$color[which(V(net.grph)$Dimension=="BAS")] <- "#ffc300"
+V(net.grph)$color[which(V(net.grph)$Dimension=="BAS_Sociability")] <- "#ffe766"
+V(net.grph)$color[which(V(net.grph)$Dimension=="BIS")] <- "#F93822FF"
+V(net.grph)$color[which(V(net.grph)$Dimension=="Boldness")] <- "#be99ea"
+V(net.grph)$color[which(V(net.grph)$Dimension=="Exploration")] <- "#5e8d5e"
+V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability")] <- "#ddb7ac"
+
 
 levels(as.factor(V(net.grph)$Dimension))
 
-levels(as.factor(V(net.grph)$color))
+col <- c("#99D3CF", "#ffc300", "#ffe766","#F93822FF","#be99ea", "#5e8d5e", "#ddb7ac")
 
-col <- c("white","darkolivegreen", "darkgoldenrod1",  "darkslategray", "deeppink3", "darkorange", "darkolivegreen1")
 
 pdf("fig/Network_tests.pdf",
                 width =8, height = 8)
 set.seed(123)
+
 plot(net.grph, layout=layout.fruchterman.reingold,
      vertex.label.color="black",
      vertex.label=V(net.grph)$Test)
 legend(x=0.5, y=1.2, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
+
+
 dev.off()
 
 pdf("fig/Network_tests_label.pdf",
                 width =8, height = 8)
-set.seed(123)
+
+set.seed(12)
 plot(net.grph, layout=layout.fruchterman.reingold,
-     vertex.label.color="black")
+     vertex.label.color="black",
+     vertex.size=5,
+     vertex.label.cex = 0.8,
+     vertex.label.dist = 0.2,
+     repel=TRUE)
 #     vertex.label=V(net.grph)$Test)
-legend(x=0.5, y=1.2, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
+legend(x=0.5, y=0.9, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
+
 dev.off()
 
-     vertex.label=
+     
 
-plot(results.2,
-     label.cex=1)
+oc <- cluster_spinglass(net.grph)
+
+oc <- cluster_walktrap(net.grph)
+
+oc
+
+print(modularity(oc))
+
+
 
 centrality(results.2)
+
+
 
 results.2
 
