@@ -25,11 +25,6 @@ net.df$Group.1 <- NULL
 
 
 ############ first a simple network
-results.8 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.8)
-
 results.5 <- estimateNetwork(net.df,
                 default="EBICglasso",
                 corMethod="spearman",
@@ -55,6 +50,16 @@ results.25 <- estimateNetwork(net.df,
                 corMethod="spearman",
                 tuning=0.25)
 
+results.19 <- estimateNetwork(net.df,
+                default="EBICglasso",
+                corMethod="spearman",
+                tuning=0.19)
+
+results.18 <- estimateNetwork(net.df,
+                default="EBICglasso",
+                corMethod="spearman",
+                tuning=0.18)
+
 
 results.15 <- estimateNetwork(net.df,
                 default="EBICglasso",
@@ -70,25 +75,11 @@ results.1 <- estimateNetwork(net.df,
 
 
 
-class(results.2)
-
-names(net.df)
-
 library(igraph)
-
-plot(results.5,
-     label.cex=2)
-
-plot(results.4)
-
-plot(results.3)
-
-
-results.2$graph
 
 plot(results.2)
 
-adjm <- as.matrix(results.2$graph)
+adjm <- as.matrix(results.19$graph)
 
 net.grph <- graph_from_adjacency_matrix(adjm, mode="undirected", weighted=T)
 
@@ -110,14 +101,21 @@ V(net.grph)$Test <- l$Test_name[match(names(V(net.grph)), l$Label)]
 V(net.grph)$Dimension <- l$Hypothesis.dimension[match(names(V(net.grph)), l$Label)]
 
 E.color.Uni = edgew
-E.color.Uni = ifelse(E.color.Uni>0, "#488f31",ifelse(E.color.Uni<0, "#de425b","grey"))
+E.color.Uni = ifelse(E.color.Uni>0, "#00539C",ifelse(E.color.Uni<0, "#EEA47F","grey"))
 E(net.grph)$color = as.character(E.color.Uni)
 
 V(net.grph)$Test
 
 l[match(names(V(net.grph)), l$Label),c(3,4)]
 
-                                        #change edge width
+V(net.grph)$Shape <- "0"
+V(net.grph)$Shape[V(net.grph)$Test=="OFT"] <- "square"
+V(net.grph)$Shape[V(net.grph)$Test=="NOT"] <- "rectangle"
+V(net.grph)$Shape[V(net.grph)$Test=="BIBAGO"] <- "circle"
+V(net.grph)$Shape[V(net.grph)$Test=="HAT"] <- "sphere"
+V(net.grph)$Shape[V(net.grph)$Test=="NPT"] <- "circle"
+
+#change edge width
 E(net.grph)$width = abs(edgew)*20
 
 V(net.grph)$Dimension
@@ -141,20 +139,25 @@ levels(as.factor(V(net.grph)$Dimension))
 
 col <- c("#99D3CF", "#ffc300", "#ffe766","#F93822FF","#be99ea", "#5e8d5e", "#ddb7ac")
 
+V(net.grph)$name <- gsub("OFT_", "", V(net.grph)$name)
+V(net.grph)$name <- gsub("NPT_", "", V(net.grph)$name)
+V(net.grph)$name <- gsub("HAT_", "", V(net.grph)$name)
+V(net.grph)$name <- gsub("_", " ", V(net.grph)$name)
 
-pdf("fig/Network_tests_label_2.pdf",
+V(net.grph)$name
+
+pdf("fig/Network_tests_label_19.pdf",
                 width =8, height = 8)
-
-
-set.seed(122)
+set.seed(12278)
 plot(net.grph, layout=layout.fruchterman.reingold,
      vertex.label.color="black",
      vertex.size=5,
+     vertex.shape=V(net.grph)$Shape,
      vertex.label.cex = 0.8,
      vertex.label.dist = 0.2,
      repel=TRUE)
 #     vertex.label=V(net.grph)$Test)
-legend(x=1, y=1, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
+legend(x=-1, y=1, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
 
 
 dev.off()
