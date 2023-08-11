@@ -27,6 +27,7 @@ labels <- rbind(labels, uni)
 labels <- labels[labels$Importance==1,] # we only analyse the important stuff
 
 if(do_dataPrep){
+    
 # loading datasets
 lat.df <- read.csv("data/laterality_dataset.csv")
 per1.df <- read.csv("data/perso_datasets.csv")
@@ -68,6 +69,7 @@ per2.df <-per2.df[, !names(per2.df)%in%c("PVC_Nr", "Batch", "Subject", "Sow", "T
 per.df <- merge(per1.df, per2.df, by="unique")
 per3.df <-per3.df[, !names(per3.df)%in%c("PVC_Nr", "Batch", "Subject", "Sow", "Test_Nr", "ID")]
 per.df <- merge(per.df, per3.df, by="unique")
+    
 per4.df <-per4.df[, !names(per4.df)%in%c("PVC_Nr", "Batch", "Subject", "Sow", "Test_Nr", "ID")]
 per.df <- merge(per.df, per4.df, by="unique")
 per.df <- per.df[,!names(per.df)%in%names(per.df)[grep("\\.x", names(per.df))]]
@@ -79,8 +81,8 @@ names(per.df) <- gsub("\\.y", "", names(per.df))
 #per.df$ID.y <- NULL
 
 #merging
-per3.df <-per3.df[, !names(per3.df)%in%c("Batch", "Subject", "Test", "ID")]
-per.df <- merge(per.df, per3.df, by="unique")
+#per3.df <-per3.df[, !names(per3.df)%in%c("Batch", "Subject", "Test", "ID")]
+#per.df <- merge(per.df, per3.df, by="unique")
 
 names(lat.df)%in%labels$Label # sanity check
 names(per.df)%in%labels$Label
@@ -125,7 +127,10 @@ perC <- na.omit(perC)
 
                                         # visualise correlation matrix
 
-m <- cor(perC[,c(7:24, 26:52)], method="pearson")
+    m <- cor(perC[,c(7:24, 26:52)], method="spearman")
+    
+    m <- cor(perC[,c(7:20, 23:39)], method="spearman")
+    
 m <- melt(m)
 names(m) <- c("X", "Y", "value")
 
@@ -144,13 +149,13 @@ ggsave("fig/FigureS1.pdf", not_cor, width = 220, height = 220, dpi = 300, units=
 
 
 # removing variables with rho>0.8
-per.df <- per.df[ , -which(names(per.df) %in% c("freez_freq", "chew_freq", "locom_freq", "NPT_walking_by_fence_freq", "NPT_sudden_display_freq", "NPT_facing_back_freq", "NPT_back_freq", "NPT_middle_freq", "NPT_facing_back_dur", "NPT_front_dur"))]
+per.df <- per.df[ , -which(names(per.df) %in% c("freez_freq", "chew_freq", "locom_freq", "NPT_walking_by_fence_freq", "NPT_sudden_display_freq", "NPT_facing_back_freq", "NPT_back_freq", "NPT_middle_freq", "NPT_facing_back_dur", "NPT_front_dur","NPT_latency_back_dur", "NPT_latency_middle_dur","expl_wob_freq","HAT_exploration_human_freq","expl_freq"))]
 
-perC <- perC[ , -which(names(perC) %in% c("freez_freq", "chew_freq", "locom_freq", "NPT_walking_by_fence_freq", "NPT_sudden_display_freq", "NPT_facing_back_freq", "NPT_back_freq", "NPT_middle_freq", "NPT_facing_back_dur", "NPT_front_dur"))]
+perC <- perC[ , -which(names(perC) %in% c("freez_freq", "chew_freq", "locom_freq", "NPT_walking_by_fence_freq", "NPT_sudden_display_freq", "NPT_facing_back_freq", "NPT_back_freq", "NPT_middle_freq", "NPT_facing_back_dur", "NPT_front_dur", "NPT_latency_back_dur", "NPT_latency_middle_dur","expl_wob_freq","HAT_exploration_human_freq","expl_freq"))]
 
-perI <- perI[ , -which(names(perI) %in% c("freez_freq", "chew_freq", "locom_freq", "NPT_walking_by_fence_freq", "NPT_sudden_display_freq", "NPT_facing_back_freq", "NPT_back_freq", "NPT_middle_freq", "NPT_facing_back_dur", "NPT_front_dur"))]
+perI <- perI[ , -which(names(perI) %in% c("freez_freq", "chew_freq", "locom_freq", "NPT_walking_by_fence_freq", "NPT_sudden_display_freq", "NPT_facing_back_freq", "NPT_back_freq", "NPT_middle_freq", "NPT_facing_back_dur", "NPT_front_dur", "NPT_latency_back_dur", "NPT_latency_middle_dur","expl_wob_freq","HAT_exploration_human_freq","expl_freq"))]
 
-m <- cor(na.omit(per.df[,names(per.df)%in%labels$Label[labels$Test_name%in%"NPT"]]), method="pearson")
+m <- cor(na.omit(per.df[,names(per.df)%in%labels$Label[labels$Test_name%in%"NPT"]]), method="spearman")
 m <- melt(m)
 names(m) <- c("X", "Y", "value")
 sanity <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
@@ -163,6 +168,7 @@ sanity <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
           legend.text = element_text(size = 10),
           axis.text.x = element_text(angle = 45, hjust = 1)) 
 # looks good
+
 #save
     saveRDS(perI, "tmp/perI.rds")
     saveRDS(per.df, "tmp/per.df.rds")
@@ -263,6 +269,7 @@ Perso_NPT$Time <- as.factor(Perso_NPT$Test_Nr)
 Perso_NPT$Sow <- as.factor(Perso_NPT$Sow)
 Perso_NPT$Batch <- as.factor(Perso_NPT$Batch)
 
+# quick vizualization
 
 if(do_rptR){
 bib_rpt1 <- rpt(PCoA1~(1|ID), grname="ID", data=Perso_BIBAGO, datatype="Gaussian", nboot=1000)
@@ -402,7 +409,8 @@ ggsave("fig/Figure1.pdf", Figure1, width = 170, height = 130, dpi = 300, units="
 
 if (do_PERMANOVA){
 # permanovas to test the effect of timepoint
-adonis2(bib_dis2~
+
+    adonis2(bib_dis2~
             perI$ID)
 
 adonis2(bib_dis2~
@@ -426,7 +434,8 @@ adonis2(hat_dis2~
             perI$Sow+
             perI$Batch,
         by="margin") # no difference of test?
-adonis2(hat_dis2~
+
+    adonis2(hat_dis2~
             perI$ID)
 
 adonis2(oft_dis2~
@@ -446,6 +455,7 @@ adonis2(npt_dis2~
 
 adonis2(npt_dis2~
             Perso_NPT$ID)
+    
 }
 
 ################### using distance based ICC.

@@ -1,10 +1,9 @@
+
 library(qgraph)
 library(glasso)
-
 library(bootnet)
-
 library(mgm)
-
+library(igraph)
 
 source("R/1_data_exploration.R")
 
@@ -26,6 +25,10 @@ net.df$Group.1 <- NULL
 
 
 ############ first a simple network
+results.8 <- estimateNetwork(net.df,
+                default="EBICglasso",
+                corMethod="spearman",
+                tuning=0.8)
 
 results.5 <- estimateNetwork(net.df,
                 default="EBICglasso",
@@ -46,6 +49,25 @@ results.2 <- estimateNetwork(net.df,
                 default="EBICglasso",
                 corMethod="spearman",
                 tuning=0.2)
+
+results.25 <- estimateNetwork(net.df,
+                default="EBICglasso",
+                corMethod="spearman",
+                tuning=0.25)
+
+
+results.15 <- estimateNetwork(net.df,
+                default="EBICglasso",
+                corMethod="spearman",
+                tuning=0.15)
+
+results.1 <- estimateNetwork(net.df,
+                default="EBICglasso",
+                corMethod="spearman",
+                tuning=0.1)
+
+
+
 
 
 class(results.2)
@@ -120,22 +142,11 @@ levels(as.factor(V(net.grph)$Dimension))
 col <- c("#99D3CF", "#ffc300", "#ffe766","#F93822FF","#be99ea", "#5e8d5e", "#ddb7ac")
 
 
-pdf("fig/Network_tests.pdf",
-                width =8, height = 8)
-set.seed(123)
-
-plot(net.grph, layout=layout.fruchterman.reingold,
-     vertex.label.color="black",
-     vertex.label=V(net.grph)$Test)
-legend(x=0.5, y=1.2, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
-
-
-dev.off()
-
-pdf("fig/Network_tests_label.pdf",
+pdf("fig/Network_tests_label_2.pdf",
                 width =8, height = 8)
 
-set.seed(12)
+
+set.seed(122)
 plot(net.grph, layout=layout.fruchterman.reingold,
      vertex.label.color="black",
      vertex.size=5,
@@ -143,15 +154,16 @@ plot(net.grph, layout=layout.fruchterman.reingold,
      vertex.label.dist = 0.2,
      repel=TRUE)
 #     vertex.label=V(net.grph)$Test)
-legend(x=0.5, y=0.9, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
+legend(x=1, y=1, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
+
 
 dev.off()
 
-     
-
-oc <- cluster_spinglass(net.grph)
+oc <- cluster_(net.grph)
 
 oc <- cluster_walktrap(net.grph)
+
+
 
 oc
 
