@@ -23,6 +23,7 @@ net.df$Sow <- NULL
 id <- net.df$Group.1
 net.df$Group.1 <- NULL
 
+ncol(net.df) # number of nodes
 
 ############ first a simple network
 results.5 <- estimateNetwork(net.df,
@@ -76,8 +77,6 @@ results.1 <- estimateNetwork(net.df,
 
 
 library(igraph)
-
-plot(results.2)
 
 adjm <- as.matrix(results.19$graph)
 
@@ -146,7 +145,7 @@ V(net.grph)$name <- gsub("_", " ", V(net.grph)$name)
 
 V(net.grph)$name
 
-pdf("fig/Network_tests_label_19.pdf",
+pdf("fig/Network_19.pdf",
                 width =8, height = 8)
 set.seed(12278)
 plot(net.grph, layout=layout.fruchterman.reingold,
@@ -158,29 +157,36 @@ plot(net.grph, layout=layout.fruchterman.reingold,
      repel=TRUE)
 #     vertex.label=V(net.grph)$Test)
 legend(x=-1, y=1, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
-
-
 dev.off()
 
-oc <- cluster_(net.grph)
+
+net.grph
+
+oc <- cluster_optimal(net.grph)
 
 oc <- cluster_walktrap(net.grph)
 
-
-
-oc
+pdf("fig/Network_19_cluster.pdf",
+                width =8, height = 8)
+set.seed(12278)
+plot(oc, net.grph, layout=layout.fruchterman.reingold,
+     vertex.label.color="black",
+     vertex.size=5,
+     vertex.shape=V(net.grph)$Shape,
+     vertex.label.cex = 0.8,
+     vertex.label.dist = 0.2,
+     repel=TRUE)
+#     vertex.label=V(net.grph)$Test)
+legend(x=-1, y=1, legend=levels(as.factor(V(net.grph)$Dimension)), col=col, bty="n",x.intersp=0.25,text.width=0.045, pch=20, pt.cex=1.5)
+dev.off()
 
 print(modularity(oc))
 
 
 
-centrality(results.2)
+centrality(results.19)
 
-
-
-results.2
-
-centralityPlot(results.2, include = c("Degree","Strength","Closeness","Betweenness"))
+centralityPlot(results.19, include = c("Strength","Betweenness", "Closeness"))
 
 bootnet_case_dropping <- bootnet(results.5,
                                        nBoots = 2500,

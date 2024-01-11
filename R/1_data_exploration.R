@@ -202,44 +202,36 @@ Perso_NPT <- na.omit(Perso_NPT)
 #### different personality tests: bibago, open field, etc.
 ## seel it as a good one (bibago)
 library(vegan)
-bib_dis <- vegdist(Perso_BIBAGO, method="bray")
-not_dis <- vegdist(Perso_NOT, method="bray")
-oft_dis <- vegdist(Perso_OFT, method="bray")
-hat_dis <- vegdist(Perso_HAT, method="bray")
-npt_dis <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="bray")
+bib_disb <- vegdist(Perso_BIBAGO, method="bray")
+not_disb <- vegdist(Perso_NOT, method="bray")
+oft_disb <- vegdist(Perso_OFT, method="bray")
+hat_disb <- vegdist(Perso_HAT, method="bray")
+npt_disb <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="bray")
 
-bib_dis2 <- vegdist(Perso_BIBAGO, method="aitchison", pseudocount=1)
-not_dis2 <- vegdist(Perso_NOT, method="aitchison", pseudocount=1)
-oft_dis2 <- vegdist(Perso_OFT, method="aitchison", pseudocount=1)
-hat_dis2 <- vegdist(Perso_HAT, method="aitchison", pseudocount=1)
-npt_dis2 <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="aitchison", pseudocount=1)
+bib_disa <- vegdist(Perso_BIBAGO, method="aitchison", pseudocount=1)
+not_disa <- vegdist(Perso_NOT, method="aitchison", pseudocount=1)
+oft_disa <- vegdist(Perso_OFT, method="aitchison", pseudocount=1)
+hat_disa <- vegdist(Perso_HAT, method="aitchison", pseudocount=1)
+npt_disa <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="aitchison", pseudocount=1)
 
-bib_dis3 <- vegdist(Perso_BIBAGO, method="chisq")
-not_dis3 <- vegdist(Perso_NOT, method="chisq")
-oft_dis3 <- vegdist(Perso_OFT, method="chisq")
-hat_dis3 <- vegdist(Perso_HAT, method="chisq")
-npt_dis3 <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="chisq")
-
-# transforming to be closer to normality
-bib_clr <- decostand(Perso_BIBAGO, method="clr", pseudocount=1)
+bib_disc <- vegdist(Perso_BIBAGO, method="chisq")
+not_disc <- vegdist(Perso_NOT, method="chisq")
+oft_disc <- vegdist(Perso_OFT, method="chisq")
+hat_disc <- vegdist(Perso_HAT, method="chisq")
+npt_disc <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="chisq")
 
 # plotting distributions
 bib <- melt(Perso_BIBAGO)
-#ggplot(data=bib, aes(x=value))+
-#    stat_density()+
-#    facet_wrap(~variable, scales="free")
-
-bib.clr <- melt(bib_clr)
-#ggplot(data=bib.clr, aes(x=value))+
-#    stat_density()+
-#    facet_wrap(~variable, scales="free")
-
+ggplot(data=bib, aes(x=value))+
+    stat_density()+
+    facet_wrap(~variable, scales="free")
 # can't use PCA's without transformation, data is skewed
-bib_pcoa <- cmdscale(bib_dis2)
-not_pcoa <- cmdscale(not_dis2)
-oft_pcoa <- cmdscale(oft_dis2)
-hat_pcoa <- cmdscale(hat_dis2)
-npt_pcoa <- cmdscale(npt_dis2)
+
+bib_pcoa <- cmdscale(bib_disa)
+not_pcoa <- cmdscale(not_disa)
+oft_pcoa <- cmdscale(oft_disa)
+hat_pcoa <- cmdscale(hat_disa)
+npt_pcoa <- cmdscale(npt_disa)
 
 Perso_BIBAGO$PCoA1 <- bib_pcoa[,1]
 Perso_BIBAGO$PCoA2 <- bib_pcoa[,2]
@@ -358,7 +350,7 @@ oft_mds <- ggplot(Perso_OFT, aes(x=PCoA1, y=PCoA2, fill=Time))+
         plot.title = element_text(size = 12, face = "bold")
           )
 hat_mds <- ggplot(Perso_HAT, aes(x=PCoA1, y=PCoA2, fill=Time))+
-    geom_point(shape=21, aes(fill=Time), size=3, stroke=0.6, alpha=0.8)+
+    geom_point(shape=21, aes(fill=Time), size=2, stroke=0.6, alpha=0.8)+
 #    geom_line(aes(group=ID), alpha=0.7)+
     stat_ellipse(aes(group=Time), geom="polygon", colour="black", alpha=0.2, linetype = "dashed", size = 0.6)+
     labs(x = "PCoA axis 1", y = "PCoA axis 2", fill = "Time point", title="HAT") +
@@ -410,44 +402,44 @@ ggsave("fig/Figure1.pdf", Figure1, width = 170, height = 130, dpi = 300, units="
 if (do_PERMANOVA){
 # permanovas to test the effect of timepoint
 
-    adonis2(bib_dis2~
+    adonis2(bib_disa~
             perI$ID)
 
-adonis2(bib_dis2~
+adonis2(bib_disa~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
         strata=perI$ID,
         by="margin") # no difference of test?
 
-adonis2(not_dis2~
+adonis2(not_disa~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
         by="margin") # no difference of test?
 
-adonis2(not_dis2~
+adonis2(not_disa~
             perI$ID)
 
-adonis2(hat_dis2~
+adonis2(hat_disa~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
         by="margin") # no difference of test?
 
-    adonis2(hat_dis2~
+    adonis2(hat_disa~
             perI$ID)
 
-adonis2(oft_dis2~
+adonis2(oft_disa~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
         by="margin") # no difference of test?
 
-adonis2(oft_dis2~
+adonis2(oft_disa~
             perI$ID)
 
-adonis2(npt_dis2~
+adonis2(npt_disa~
             Perso_NPT$Test_Nr+
             Perso_NPT$Sow+
             Perso_NPT$Batch,
@@ -459,11 +451,18 @@ adonis2(npt_dis2~
 }
 
 ################### using distance based ICC.
-dICC(bib_dis2, strata=perI$ID)
-dICC(not_dis2, strata=perI$ID)
-dICC(oft_dis2, strata=perI$ID)
-dICC(hat_dis2, strata=perI$ID)
-dICC(npt_dis2, strata=Perso_NPT$ID)
+dICC(bib_disa, strata=perI$ID)
+dICC(not_disa, strata=perI$ID)
+dICC(oft_disa, strata=perI$ID)
+dICC(hat_disa, strata=perI$ID)
+dICC(npt_disa, strata=Perso_NPT$ID)
+
+npt_disa <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="aitchison", pseudocount=1)
+
+Perso_NPT[,names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]]
+
+npt_disa
+
 
 ################# now we need to make some decisions,
 # NPT has missing data from animals of one batch and one time point

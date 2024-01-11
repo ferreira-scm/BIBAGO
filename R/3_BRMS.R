@@ -24,6 +24,8 @@ library(brms)
 
 df
 
+##### compare only LL and RR #####
+
 # ok let's do 3 univariate since our multivariate doesn't converge
 #fit_w <- brm(LI_w~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq+
 #                 (1|Sow),
