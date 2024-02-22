@@ -1,95 +1,126 @@
 library(brms)
+library(ggplot2)
+library(cluster)
+library(dbscan)
+library(corrplot)
+library(dplyr)
 
-#M<-cor(alldf[,c("chew_dur", "expl_wob_dur", "expl_wob_freq", "freez_dur", "BIBAGO_inter_voc_dur", "expl_wob_lat", "BIBAGO_voc_freq", "choco_eaten")])
-#corrplot(M, method = 'number')
+source("R/1_data_exploration.R")
 
-#M2<-cor(alldf[,c("chew_dur", "expl_wob_freq", "freez_dur", "BIBAGO_inter_voc_dur", "expl_wob_lat", "BIBAGO_voc_freq")])
+#clustering based on laterality by Charlotte
+# scaling
+latS <- merge(latI, perA, by.x="ID", by.y="Group.1")
+latS<- latS %>% mutate_at(c("LI_w", "LI_f", "LI_t"), ~(scale(.) %>% as.vector))
 
-#library(corrplot)
-#corrplot(M2, method = 'number')
-# we have high colliniarity
-# we remove expl_wob_dur, choco_eaten, and expl_wob_freq
-## now we standardize
+km <- kmeans(latS[, c("LI_f", "LI_t")], centers=4, nstart=10)# we leave LI_w out because distribution is not binomial, therefore not a good indicator of laterality. We expect 4 clusters (2*2)
 
-#standardize <- function(x){
-#    (x - mean(x))/sd(x)
-#}
+centroids <- as_tibble(km$centers, rownames="cluster")
 
-#library(dplyr)
+centroids# cluster 3 is RR and cluster 4 is LL
 
-#df <- alldf %>% mutate_at(c("chew_dur", "freez_dur", "BIBAGO_inter_voc_dur", "expl_wob_lat", "BIBAGO_voc_freq"), ~(standardize(.) %>% as.vector))
+latS$km <- as.factor(km$cluster)
 
+latK <- latS[latS$km%in%c("3", "4"),]
+
+# just to make it pretty, I want a variable with 0 and 1
+latK$Lat[latK$km==3] <- 1
+latK$Lat[latK$km==4] <- 0
+
+ggplot(latK, aes(LI_f, LI_t, colour=km))+geom_point()
 
 #df <- df[, c("chew_dur", "freez_dur", "BIBAGO_inter_voc_dur", "expl_wob_lat", "BIBAGO_voc_freq")]
 
-df
-
 ##### compare only LL and RR #####
+Lat <- brm(Lat~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq,
+           data = latK,
+           family=bernoulli(),
+             chains = 4,
+             cores = 4,
+             warmup=1000,
+             iter=6000)
 
-# ok let's do 3 univariate since our multivariate doesn't converge
-#fit_w <- brm(LI_w~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq+
-#                 (1|Sow),
-#             data = df,
-#             chains = 4,
-#             cores = 4,
-#             warmup=1000,
-#             iter=6000)
-#fit_w
+Lat_OFT <- brm(Lat~jump_freq+ locom_dur+ OFT_voc_freq+expl_dur,
+           data = latK,
+           family=bernoulli(),
+             chains = 4,
+             cores = 4,
+             warmup=1000,
+             iter=6000)
 
-#fit_t <- brm(LI_t~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq,
-#             data = df,
-#             chains = 4,
-#             cores = 4,
-#             warmup=1000,
-#             iter=6000)
+Lat_NOT <- brm(Lat~expl_obj_dur+expl_obj_freq+NOT_inter_voc_dur+lat_expl_obj_dur,
+           data = latK,
+           family=bernoulli(),
+             chains = 4,
+             cores = 4,
+             warmup=1000,
+             iter=6000)
 
-#fit_t
+Lat_OFT
 
-#fit_f <- brm(LI_f~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq,
-#             data = df,
-#             chains = 4,
-#             cores = 4,
-#             warmup=1000,
-#             iter=6000)
+Lat_NOT
 
+latK$Lat
 
-#fit_t
+A <- ggplot(latK, aes(x=Lat, y=chew_dur))+
+    geom_boxplot()+
+    geom_point(shape=21, size=2, stroke=0.4, fill="#FFC0CB", alpha=0.8)+
+    labs(x = "Laterality", y = "Chew dur") +
+    theme_classic()
 
-
-#names(alldf)
-
-#install.packages("corrplot")
-
-#library(corrplot)
-
-
-#plot(alldf$expl_wob_freq, alldf$expl_wob_dur)
-
-#plot(alldf$chew_freq, alldf$chew_dur)
-
-#plot(alldf$BIBAGO_inter_voc_dur, alldf$BIBAGO_voc_freq)
-
-#plot(alldf$freez_freq, alldf$freez_dur)
-
-#bform1 <- bf(mvbind(LI_w, LI_f, LI_t) ~chew_dur+ expl_wob_dur + expl_wob_freq + freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq + choco_eaten + (1|q|PVC_Nr)) + set_rescor(TRUE)# doesn't work
-#fit1 <- brm(bform1, data = alldf, chains = 4, cores = 4, warmup=1000, iter=6000)
-
-#fit1
-#
-#modelLAT<-brm(~1+ not+oft+
-#                (1|mm(IDA,IDB))+(1|sow)+(1|batch),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 50, chains = 4,
-#                inits=0)
+B <- ggplot(latK, aes(x=Lat, y=freez_dur))+
+    geom_boxplot()+
+    geom_point(shape=21, size=2, stroke=0.4, fill="#FFC0CB", alpha=0.8)+
+    labs(x = "Laterality", y = "Freeze dur") +
+    theme_classic()
 
 
-#cor.test(alldf$LI_t, alldf$LI_f)
+C <- ggplot(latK, aes(x=Lat, y=BIBAGO_voc_freq))+
+    geom_boxplot()+
+    geom_point(shape=21, size=2, stroke=0.4, fill="#FFC0CB", alpha=0.8)+
+    labs(x = "Laterality", y = "Voc freq") +
+    theme_classic()
 
+
+D <- ggplot(latK, aes(x=Lat, y=expl_wob_lat))+
+    geom_boxplot()+
+    geom_point(shape=21, size=2, stroke=0.4, fill="#FFC0CB", alpha=0.8)+
+    labs(x = "Laterality", y = "expl wob lat") +
+    theme_classic()
+
+E <- ggplot(latK, aes(x=Lat, y=BIBAGO_inter_voc_dur))+
+    geom_boxplot()+
+    geom_point(shape=21, size=2, stroke=0.4, fill="#FFC0CB", alpha=0.8)+
+    labs(x = "Laterality", y = "Inter voc dur") +
+    theme_classic()
+
+FigLat <- plot_grid(A, B, C, D, E, labels="auto", nrow=2)
+
+ggsave("fig/Laterality.pdf", FigLat, width = 170, height = 130, dpi = 300, units="mm")
+
+
+## distance based analysis
+library(vegan)
+BibagoA <- vegdist(latK[,c("chew_dur", "freez_dur", "BIBAGO_inter_voc_dur", "expl_wob_lat", "BIBAGO_voc_freq")], method="aitchison", pseudocount=1)
+
+adonis2(BibagoA~latK$Lat)
+
+
+NOTA <- vegdist(latK[,c("chew_dur", "freez_dur", "BIBAGO_inter_voc_dur", "expl_wob_lat", "BIBAGO_voc_freq")], method="aitchison", pseudocount=1)
+
+
+OFTA <- vegdist(latK[,c("jump_freq", "locom_dur", "OFT_voc_freq", "expl_dur")], method="aitchison", pseudocount=1)
+
+adonis2(OFTA~latK$Lat)
+
+NOTA <- vegdist(latK[,c("expl_obj_dur", "expl_obj_freq", "NOT_inter_voc_dur", "lat_expl_obj_dur")], method="aitchison", pseudocount=1)
+
+
+adonis2(NOTA~latK$Lat)
+
+adonis2(OFTA~latK$Lat)
 
 # making key for the order of ID and sample
-#key <- data.frame(ID=paste(perI$PVC_Nr, perI$Test_Nr, sep="_"), ID2=perI$PVC_Nr)
+key <- data.frame(ID=paste(perI$PVC_Nr, perI$Test_Nr, sep="_"), ID2=perI$PVC_Nr)
 
 #bib_dis <- as.matrix(bib_dis)
 #rownames(bib_dis) <- key$ID
@@ -218,7 +249,6 @@ conditional_effects(model1)
 bayes_R2(model1)
 
 ##### OK now 
-############################# network
 
 
 ############################
