@@ -81,7 +81,7 @@ Importance,Test_name,Hypothesis-dimension,Label
 1,NPT,Sociability,NPT_middle_freq
 1,NPT,Sociability,NPT_sudden_display_dur
 1,NPT,Sociability,NPT_sudden_display_freq
-1,NPT,Sociability,NPT_tail_wagging_freq
+1,NPT,BAS,NPT_tail_wagging_freq
 1,NPT,Sociability,NPT_turn_back_freq
 1,NPT,Sociability,NPT_walking_by_fence_dur
 1,NPT,Sociability,NPT_walking_by_fence_freq
