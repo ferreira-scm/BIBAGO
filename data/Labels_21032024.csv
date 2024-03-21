@@ -50,7 +50,7 @@ Importance,Test_name,Hypothesis-dimension,Label
 1,BIBAGO,BIS,expl_wob_lat
 0,BIBAGO,NA,no_expl_wob_dur
 0,BIBAGO,NA,no_expl_wob_freq
-1,BIBAGO,Punish,BIBAGO_voc_freq
+1,BIBAGO,Sociability,BIBAGO_voc_freq
 0,BIBAGO,NA,wob_open
 1,BIBAGO,BAS,choco_eaten
 0,BIBAGO,Reward,Kong_score
