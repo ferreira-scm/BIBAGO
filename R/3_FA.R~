@@ -1,0 +1,45 @@
+library(psych)
+library(GPArotation)
+
+source("R/1_data_exploration.R")
+
+rownames(Perso) <- Perso$ID
+Perso$ID <- NULL
+
+l <- labels[which(labels$Label%in%names(Perso)),]
+# reordering
+l <- l[match(names(Perso), l$Label),]
+all(l$Label==names(Perso))# santiy check
+
+
+
+BisBas <- Perso[,names(Perso)%in%l$Label[l$Hypothesis.dimension%in%c("BAS", "BIS")]]
+
+                                        # scale and do the correlation matrix
+BisBas.s<-scale(BisBas)
+corr_BisBas <- cor(BisBas.s)
+ggcorrplot(BisBas.s)
+
+cortest.mat(corr_BisBas,n1=80)
+cortest.bartlett(corr_BisBas,n=80)
+KMO(corr_BisBas)
+
+fa.parallel(corr_BisBas, n.obs=80)
+
+
+
+# 2
+
+BisBas_sol <- fa(corr_BisBas, nfactors=2, rotate="oblimin", fm="pa")
+
+BisBas_sol
+
+BisBas_scores <- factor.scores(BisBas.s, BisBas_sol)
+
+BisBas_scores
+
+## do FA for other dimenstions
+
+### testing laterality with bis bas scores
+
+### 

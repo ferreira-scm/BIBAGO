@@ -25,12 +25,32 @@ names(mriI)
 mriI[,8:17]
 
 ## repeatability
+mriI$ID <- as.factor(mriI$PVC_Nr)
+str(mri$PVC_Nr)
+
+str(mriI)
+
+names(mriI)
+Rexpl_wob_dur <- rpt(expl_wob_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
+
+Rfreez_dur <- rpt(freez_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
+RBIBAGO_inter_voc_dur<-rpt(BIBAGO_inter_voc_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
+Rexpl_wob_lat <- rpt(expl_wob_lat~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
+RBIBAGO_voc_freq <- rpt(BIBAGO_voc_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
+Rchoco_eaten <- rpt(choco_eaten~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
+
+Rfreez_dur
+RBIBAGO_inter_voc_dur
+Rexpl_wob_lat
+RBIBAGO_voc_freq
+Rchoco_eaten
+
 
 bib_dis <- vegdist(mriI[,8:17], method="aitchison", pseudocount=1)
 
 dICC(bib_dis, strata=mriI$PVC_Nr)
 
-mriI$PVC_Nr <- as.factor(mriI$PVC_Nr)
+
 
 adonis2(bib_dis~
             mriI$Test_Nr+

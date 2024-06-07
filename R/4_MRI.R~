@@ -1,0 +1,18 @@
+library(mice)
+
+mri <- read.csv("data/BIBAGO_MRI_dataset.csv")
+
+head(mri)
+
+# remove NA's
+mri <- mri[!is.na(mri$Subject),]
+mri <- mri[!is.na(mri$Pen),]
+
+pMiss <- function(x){sum(is.na(x))/length(x)*100}
+
+apply(mri,2,pMiss) # no variable with more than 10% misssing data.
+apply(mri,1,pMiss)
+
+# now we save
+mri_temp <- mice(mri,m=10,maxit=50,meth='pmm',seed=500)
+mriI <- complete(mri_temp,1)

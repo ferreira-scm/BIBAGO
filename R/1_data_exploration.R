@@ -11,23 +11,30 @@ do_PERMANOVA <- FALSE
 do_rptR <- FALSE
 
 # cleaning labels
-labels <- read.csv("data/Labels.csv") # varialble and test labels
+labels <- read.csv("data/Labels_21032024.csv") # varialble and test labels
+
+head(labels)
+
+labels[labels$Hypothesis.dimension%in%"BAS",]
+
+labels[labels$Hypothesis.dimension%in%"BIS",]
+
+labels[labels$Hypothesis.dimension%in%"Sociability",]
+
+labels[labels$Hypothesis.dimension%in%"Exploration",]
+
+labels[labels$Hypothesis.dimension%in%"Boldness",]
+
+
 #some adjustments
-labels$Hypothesis.dimension[labels$Label%in%c("chew_dur", "expl_wob_dur", "expl_wob_freq", "choco_eaten", "expl_wob_lat")] <- "BAS"
-labels$Hypothesis.dimension[labels$Label%in%c("freez_dur", "BIBAGO_inter_voc_dur", "BIBAGO_voc_freq")] <- "BIS"
-labels$Hypothesis.dimension[labels$Label%in%c("HAT_exploration_human_dur", "HAT_exploration_human_freq", "NPT_sudden_display_dur")] <- "Exploration"
-labels$Hypothesis.dimension[labels$Label%in%c("HAT_latency_to_touch_the_human_dur")] <- "Boldness"
-labels$Hypothesis.dimension[labels$Label%in%c("HAT_tail_wagging_freq", "NPT_tail_wagging_freq", "NPT_sudden_display_dur")] <- "BAS_Sociability"
 labels$Importance[labels$Label%in%c("HAT_touching_not_visible_freq")] <- 0
 labels$Importance[labels$Label=="HAT_pig_not_visible_dur"] <- 0
-labels[which(labels$Label%in%"NPT_latency_nose_nose_dur"),]
-# adding unique and ID as important
+#labels[which(labels$Label%in%"NPT_latency_nose_nose_dur"),]
 uni <- data.frame(Importance=c(1,1), Test_name=c(NA, NA), Hypothesis.dimension=c(NA, NA), Label=c("unique", "ID"))
 labels <- rbind(labels, uni)
 labels <- labels[labels$Importance==1,] # we only analyse the important stuff
 
 if(do_dataPrep){
-    
 # loading datasets
 lat.df <- read.csv("data/laterality_dataset.csv")
 per1.df <- read.csv("data/perso_datasets.csv")
@@ -125,12 +132,9 @@ perI$PVC_Nr <- as.factor(perI$PVC_Nr)
 perC <-merge(perI, per.df[,names(per.df)%in% c(labels$Label[labels$Test_name%in%"NPT"], "unique")], by="unique")
 perC <- na.omit(perC)
 
-                                        # visualise correlation matrix
-
+# visualise correlation matrix
     m <- cor(perC[,c(7:24, 26:52)], method="spearman")
-    
     m <- cor(perC[,c(7:20, 23:39)], method="spearman")
-    
 m <- melt(m)
 names(m) <- c("X", "Y", "value")
 
@@ -169,6 +173,10 @@ sanity <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
           axis.text.x = element_text(angle = 45, hjust = 1)) 
 # looks good
 
+    # removing these variables because they are composite
+per.df$NPT_facing_fence_dur <- NULL
+per.df$NPT_facing_fence_freq <- NULL
+
 #save
     saveRDS(perI, "tmp/perI.rds")
     saveRDS(per.df, "tmp/per.df.rds")
@@ -176,15 +184,17 @@ sanity <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
     saveRDS(latI, "tmp/latI.rds")
     saveRDS(lat.df, "tmp/lat.df.rds")
 }
-    
+
 perI <- readRDS("tmp/perI.rds")
 per.df <- readRDS("tmp/per.df.rds")
 perC <- readRDS("tmp/perC.rds")
 latI <- readRDS("tmp/latI.rds")
 lat.df <- readRDS("tmp/lat.df.rds")
 
+head(per.df)
 
-## question 1: are personality behaviours consistent over time?
+
+# separating dataframes for each test
 Perso_BIBAGO <- perI[,names(perI)%in%labels$Label[labels$Test_name%in%"BIBAGO"]]
 Perso_NOT <- perI[,names(perI)%in%labels$Label[labels$Test_name%in%"NOT"]]
 Perso_OFT <- perI[,names(perI)%in%labels$Label[labels$Test_name%in%"OFT"]]
@@ -199,298 +209,234 @@ names(Perso_NPT)
 
 Perso_NPT <- na.omit(Perso_NPT)
 
+## question 1: are personality behaviours consistent over time?
+### consistency for each predictor
+if(do_rptR){
+names(Perso_BIBAGO)
+Rchew_dur <- rpt(chew_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+Rexpl_wob_dur <- rpt(expl_wob_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+Rfreez_dur <- rpt(freez_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+RBIBAGO_inter_voc_dur<-rpt(BIBAGO_inter_voc_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+Rexpl_wob_lat <- rpt(expl_wob_lat~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+RBIBAGO_voc_freq <- rpt(BIBAGO_voc_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+Rchoco_eaten <- rpt(choco_eaten~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+
+Rchew_dur
+Rexpl_wob_dur
+Rfreez_dur
+RBIBAGO_inter_voc_dur
+Rexpl_wob_lat # NOT REPEATABLE
+RBIBAGO_voc_freq
+Rchoco_eaten
+
+
+names(Perso_NOT)
+
+Rexpl_obj_dur<-rpt(expl_obj_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+Rexpl_obj_freq <- rpt(expl_obj_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+RNOT_inter_voc_dur <- rpt(NOT_inter_voc_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+Rlat_expl_obj_dur <- rpt(lat_expl_obj_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+
+Rexpl_obj_dur
+Rexpl_obj_freq # not significant but also not 0
+RNOT_inter_voc_dur
+Rlat_expl_obj_dur # NOT REPEATABLE
+
+names(Perso_HAT)
+
+RHAT_exploration_human_dur<-rpt(HAT_exploration_human_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+RHAT_jumping_freq <- rpt(HAT_jumping_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+RHAT_latency_to_touch_the_human_dur <- rpt(HAT_latency_to_touch_the_human_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+RHAT_tail_wagging_freq <- rpt(HAT_tail_wagging_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+
+RHAT_exploration_human_dur # NOT REPEATABLE
+RHAT_jumping_freq #NOT REPEATABLE
+    RHAT_latency_to_touch_the_human_dur
+    RHAT_tail_wagging_freq
+
+names(Perso_OFT)
+Rjump_freq<-rpt(jump_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+Rlocom_dur<-rpt(locom_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+ROFT_voc_freq <- rpt(OFT_voc_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+
+Rjump_freq # NOT REPEATABLE
+Rlocom_dur # NOT REPEATABLE
+ROFT_voc_freq # NOT REPEATABLE
+
+names(Perso_NPT)
+
+RNPT_latency_nose_nose_dur<-rpt(NPT_latency_nose_nose_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_nose_nose_freq<-rpt(NPT_nose_nose_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_back_dur<-rpt(NPT_back_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_climbing_freq<-rpt(NPT_climbing_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_facing_fence_dur<-rpt(NPT_facing_fence_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_facing_fence_freq<-rpt(NPT_facing_fence_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_front_freq<-rpt(NPT_front_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_latency_front_dur<-rpt(NPT_latency_front_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_middle_dur<-rpt(NPT_middle_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_sudden_display_dur<-rpt(NPT_sudden_display_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_tail_wagging_freq<-rpt(NPT_tail_wagging_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_turn_back_freq<-rpt(NPT_turn_back_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+RNPT_walking_by_fence_dur<-rpt(NPT_walking_by_fence_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+
+RNPT_latency_nose_nose_dur # NOT REPEATABLE 
+RNPT_nose_nose_freq # NOT REPEATABLE 
+RNPT_back_dur
+RNPT_climbing_freq # NOT REPEATABLE
+RNPT_facing_fence_dur
+RNPT_facing_fence_freq
+RNPT_front_freq # NOT REPEATABLE
+RNPT_latency_front_dur # NOT REPEATABLE
+RNPT_middle_dur
+RNPT_sudden_display_dur
+RNPT_tail_wagging_freq
+RNPT_turn_back_freq
+RNPT_walking_by_fence_dur
+## those are not repeatable but we keep them
+expl_obj_freq # NOT
+lat_expl_obj_dur # NOT
+HAT_exploration_human_dur # HAT
+HAT_jumping_freq #HAT
+NPT_latency_nose_nose_dur # NPT
+NPT_nose_nose_freq # NPT 
+NPT_climbing_freq # NPT
+NPT_front_freq # NPT
+NPT_latency_front_dur # NPT
+## we keep all OFT
+}
+
+
+Perso_NOT <- Perso_NOT[,!names(Perso_NOT)%in%c("expl_obj_freq", "lat_expl_obj_dur")]
+Perso_HAT <-Perso_HAT[, !names(Perso_HAT)%in%c("HAT_exploration_human_dur", "HAT_jumping_freq")]
+Perso_NPT <-Perso_NPT[, !names(Perso_NPT)%in%c("NPT_latency_nose_nose_dur", "NPT_nose_nose_freq", "NPT_climbing_freq", "NPT_front_freq", "NPT_latency_front_dur")]
+
+names(Perso_BIBAGO)
+names(Perso_NOT)
+names(Perso_OFT)
+names(Perso_HAT)
+names(Perso_NPT)
+
 #### different personality tests: bibago, open field, etc.
 ## seel it as a good one (bibago)
 library(vegan)
-bib_disb <- vegdist(Perso_BIBAGO, method="bray")
-not_disb <- vegdist(Perso_NOT, method="bray")
-oft_disb <- vegdist(Perso_OFT, method="bray")
-hat_disb <- vegdist(Perso_HAT, method="bray")
-npt_disb <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="bray")
-
-bib_disa <- vegdist(Perso_BIBAGO, method="aitchison", pseudocount=1)
-not_disa <- vegdist(Perso_NOT, method="aitchison", pseudocount=1)
-oft_disa <- vegdist(Perso_OFT, method="aitchison", pseudocount=1)
-hat_disa <- vegdist(Perso_HAT, method="aitchison", pseudocount=1)
-npt_disa <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="aitchison", pseudocount=1)
-
-bib_disc <- vegdist(Perso_BIBAGO, method="chisq")
-not_disc <- vegdist(Perso_NOT, method="chisq")
-oft_disc <- vegdist(Perso_OFT, method="chisq")
-hat_disc <- vegdist(Perso_HAT, method="chisq")
-npt_disc <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="chisq")
-
-# plotting distributions
-bib <- melt(Perso_BIBAGO)
-ggplot(data=bib, aes(x=value))+
-    stat_density()+
-    facet_wrap(~variable, scales="free")
-# can't use PCA's without transformation, data is skewed
-
-bib_pcoa <- cmdscale(bib_disa)
-not_pcoa <- cmdscale(not_disa)
-oft_pcoa <- cmdscale(oft_disa)
-hat_pcoa <- cmdscale(hat_disa)
-npt_pcoa <- cmdscale(npt_disa)
-
-Perso_BIBAGO$PCoA1 <- bib_pcoa[,1]
-Perso_BIBAGO$PCoA2 <- bib_pcoa[,2]
-Perso_BIBAGO$ID <- perI$ID
-Perso_BIBAGO$Sow <- perI$Sow
-Perso_BIBAGO$Time <- as.factor(perI$Test_Nr)
-
-Perso_NOT$ID <- perI$ID
-Perso_NOT$PCoA1 <- not_pcoa[,1]
-Perso_NOT$PCoA2 <- not_pcoa[,2]
-Perso_NOT$Time <- as.factor(perI$Test_Nr)
-
-Perso_OFT$ID <- perI$ID
-Perso_OFT$PCoA1 <- oft_pcoa[,1]
-Perso_OFT$PCoA2 <- oft_pcoa[,2]
-Perso_OFT$Time <- as.factor(perI$Test_Nr)
-
-Perso_HAT$ID <- perI$ID
-Perso_HAT$PCoA1 <- hat_pcoa[,1]
-Perso_HAT$PCoA2 <- hat_pcoa[,2]
-Perso_HAT$Time <- as.factor(perI$Test_Nr)
-
-Perso_NPT$PCoA1 <- npt_pcoa[,1]
-Perso_NPT$PCoA2 <- npt_pcoa[,2]
-Perso_NPT$Time <- as.factor(Perso_NPT$Test_Nr)
+bib_dis <- vegdist(scale(Perso_BIBAGO), method="euclidean")
+not_dis <- vegdist(scale(Perso_NOT), method="euclidean")
+oft_dis <- vegdist(scale(Perso_OFT), method="euclidean")
+hat_dis <- vegdist(scale(Perso_HAT), method="euclidean")
+npt_dis <- vegdist(scale(Perso_NPT[,!names(Perso_NPT)%in%c("unique", "Batch", "Sow", "Test_Nr","ID")]), method="euclidean")
 
 Perso_NPT$Sow <- as.factor(Perso_NPT$Sow)
 Perso_NPT$Batch <- as.factor(Perso_NPT$Batch)
-
-# quick vizualization
-
-if(do_rptR){
-bib_rpt1 <- rpt(PCoA1~(1|ID), grname="ID", data=Perso_BIBAGO, datatype="Gaussian", nboot=1000)
-bib_rpt2 <- rpt(PCoA2~(1|ID), grname="ID", data=Perso_BIBAGO, datatype="Gaussian", nboot=1000)
-not_rpt1 <- rpt(PCoA1~(1|ID), grname="ID", data=Perso_NOT, datatype="Gaussian", nboot=1000)
-not_rpt2 <- rpt(PCoA2~(1|ID), grname="ID", data=Perso_NOT, datatype="Gaussian", nboot=1000)
-oft_rpt1 <- rpt(PCoA1~(1|ID), grname="ID", data=Perso_OFT, datatype="Gaussian", nboot=1000)
-oft_rpt2 <- rpt(PCoA2~(1|ID), grname="ID", data=Perso_OFT, datatype="Gaussian", nboot=1000)
-hat_rpt1 <- rpt(PCoA1~(1|ID), grname="ID", data=Perso_HAT, datatype="Gaussian", nboot=1000)
-hat_rpt2 <- rpt(PCoA2~(1|ID), grname="ID", data=Perso_HAT, datatype="Gaussian", nboot=1000)
-npt_rpt1 <- rpt(PCoA1~(1|ID), grname="ID", data=Perso_NPT, datatype="Gaussian", nboot=1000)
-npt_rpt2 <- rpt(PCoA2~(1|ID), grname="ID", data=Perso_NPT, datatype="Gaussian", nboot=1000)
-(bib_rpt1)
-(bib_rpt2)
-(not_rpt1)
-(not_rpt2)
-(oft_rpt1)
-(oft_rpt2)
-(hat_rpt1)
-(hat_rpt2)
-npt_rpt1
-npt_rpt2
-}
-
-# visualizing time effect
-time_palette <- c("#00203FFF", "#ADEFD1FF")
-
-
-bib_mds <- ggplot(Perso_BIBAGO, aes(x=PCoA1, y=PCoA2, fill=Time))+
-    geom_point(shape=21, aes(fill=Time), size=2, stroke=0.4, alpha=0.8)+
-#    geom_line(aes(group=ID), alpha=0.7)+
-    stat_ellipse(aes(group=Time), geom="polygon", colour="black", alpha=0.2, linetype = "dashed", size = 0.6)+
-    labs(x = "PCoA axis 1", y = "PCoA axis 2", fill = "Time point", title="BIBAGO") +
-    scale_fill_manual(values = time_palette) +
-    theme_bw(base_size=12)+
-    theme(
-        legend.position = "none",
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_line(color = "black"),
-        legend.key.size = unit(1.2, "lines"),
-        legend.title = element_text(size = 10, face = "bold"),
-        legend.text = element_text(size = 9),
-        axis.text = element_text(size = 9),
-        axis.title = element_text(size = 10, face = "bold"),
-        plot.title = element_text(size = 12, face = "bold")
-          )
-
-not_mds <- ggplot(Perso_NOT, aes(x=PCoA1, y=PCoA2, fill=Time))+
-    geom_point(shape=21, aes(fill=Time), size=2, stroke=0.4, alpha=0.8)+
-#    geom_line(aes(group=ID), alpha=0.7)+
-    stat_ellipse(aes(group=Time), geom="polygon", colour="black", alpha=0.2, linetype = "dashed", size = 0.6)+
-    labs(x = "PCoA axis 1", y = "PCoA axis 2", fill = "Time point", title="NOT") +
-    scale_fill_manual(values = time_palette) +
-    theme_bw(base_size=12)+
-    theme(
-        legend.position = "none",
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_line(color = "black"),
-        legend.key.size = unit(1.2, "lines"),
-        legend.title = element_text(size = 10, face = "bold"),
-        legend.text = element_text(size = 9),
-        axis.text = element_text(size = 9),
-        axis.title = element_text(size = 10, face = "bold"),
-        plot.title = element_text(size = 12, face = "bold")
-          )
-
-oft_mds <- ggplot(Perso_OFT, aes(x=PCoA1, y=PCoA2, fill=Time))+
-    geom_point(shape=21, aes(fill=Time),  size=2, stroke=0.4, alpha=0.8)+
-#    geom_line(aes(group=ID), alpha=0.7)+
-    stat_ellipse(aes(group=Time), geom="polygon", colour="black", alpha=0.2, linetype = "dashed", size = 0.6)+
-    labs(x = "PCoA axis 1", y = "PCoA axis 2", fill = "Time point", title="OFT") +
-    scale_fill_manual(values = time_palette) +
-    theme_bw(base_size=12)+
-    theme(
-        legend.position = "none",
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_line(color = "black"),
-        legend.key.size = unit(1.2, "lines"),
-        legend.title = element_text(size = 10, face = "bold"),
-        legend.text = element_text(size = 9),
-        axis.text = element_text(size = 9),
-        axis.title = element_text(size = 10, face = "bold"),
-        plot.title = element_text(size = 12, face = "bold")
-          )
-hat_mds <- ggplot(Perso_HAT, aes(x=PCoA1, y=PCoA2, fill=Time))+
-    geom_point(shape=21, aes(fill=Time), size=2, stroke=0.6, alpha=0.8)+
-#    geom_line(aes(group=ID), alpha=0.7)+
-    stat_ellipse(aes(group=Time), geom="polygon", colour="black", alpha=0.2, linetype = "dashed", size = 0.6)+
-    labs(x = "PCoA axis 1", y = "PCoA axis 2", fill = "Time point", title="HAT") +
-    scale_fill_manual(values = time_palette) +
-    theme_bw(base_size=12)+
-    theme(
-        legend.position = "none",
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_line(color = "black"),
-        legend.key.size = unit(1.2, "lines"),
-        legend.title = element_text(size = 10, face = "bold"),
-        legend.text = element_text(size = 9),
-        axis.text = element_text(size = 9),
-        axis.title = element_text(size = 10, face = "bold"),
-        plot.title = element_text(size = 12, face = "bold")
-          )
-
-npt_mds <- ggplot(Perso_NPT, aes(x=PCoA1, y=PCoA2, fill=Time))+
-    geom_point(shape=21, aes(fill=Time), size=2, stroke=0.4, alpha=0.8)+
-#    geom_line(aes(group=ID), alpha=0.7)+
-    stat_ellipse(aes(group=Time), geom="polygon", colour="black", alpha=0.2, linetype = "dashed", size = 0.6)+
-    labs(x = "PCoA axis 1", y = "PCoA axis 2", fill = "Time point", title="NPT") +
-    scale_fill_manual(values = time_palette) +
-    theme_bw(base_size=12)+
-    theme(
-        legend.position = "none",
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_line(color = "black"),
-        legend.key.size = unit(1.2, "lines"),
-        legend.title = element_text(size = 10, face = "bold"),
-        legend.text = element_text(size = 9),
-        axis.text = element_text(size = 9),
-        axis.title = element_text(size = 10, face = "bold"),
-        plot.title = element_text(size = 12, face = "bold")
-          )
-
-
-library(cowplot)
-legend <- get_legend(
-              bib_mds + theme(legend.position="right")
-              )
-
-Figure1 <- plot_grid(bib_mds, npt_mds, not_mds, hat_mds, oft_mds,legend, labels="auto", nrow=2)
-ggsave("fig/Figure1.pdf", Figure1, width = 170, height = 130, dpi = 300, units="mm")
-
+Perso_NPT$ID <- as.factor(Perso_NPT$ID)
 
 if (do_PERMANOVA){
 # permanovas to test the effect of timepoint
 
-    adonis2(bib_disa~
-            perI$ID)
-
-adonis2(bib_disa~
+adonis2(bib_dis~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
-        strata=perI$ID,
-        by="margin") # no difference of test?
+        by="margin")
 
-adonis2(not_disa~
+adonis2(not_dis~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
         by="margin") # no difference of test?
 
-adonis2(not_disa~
-            perI$ID)
-
-adonis2(hat_disa~
+adonis2(hat_dis~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
         by="margin") # no difference of test?
 
-    adonis2(hat_disa~
-            perI$ID)
-
-adonis2(oft_disa~
+adonis2(oft_dis~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
         by="margin") # no difference of test?
 
-adonis2(oft_disa~
-            perI$ID)
-
-adonis2(npt_disa~
+adonis2(npt_dis~
             Perso_NPT$Test_Nr+
             Perso_NPT$Sow+
             Perso_NPT$Batch,
         by="margin") # no difference of test?
 
-adonis2(npt_dis2~
-            Perso_NPT$ID)
-    
 }
 
 ################### using distance based ICC.
-dICC(bib_disa, strata=perI$ID)
-dICC(not_disa, strata=perI$ID)
-dICC(oft_disa, strata=perI$ID)
-dICC(hat_disa, strata=perI$ID)
-dICC(npt_disa, strata=Perso_NPT$ID)
-
-npt_disa <- vegdist(Perso_NPT[, names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]], method="aitchison", pseudocount=1)
-
-Perso_NPT[,names(Perso_NPT)%in% labels$Label[labels$Test_name%in%"NPT"]]
-
-npt_disa
+dICC(bib_dis, strata=perI$ID)
+dICC(not_dis, strata=perI$ID)
+dICC(oft_dis, strata=perI$ID)
+dICC(hat_dis, strata=perI$ID)
+dICC(npt_dis, strata=Perso_NPT$ID)
 
 
 ################# now we need to make some decisions,
 # NPT has missing data from animals of one batch and one time point
 # what do we do? Either we remove those animals and have smaller dataset.
-# We can also do the mean for each time point. This is fine for NPT since time point explains very little of the variance. Let's do that
-perA <- perI
-perA$PVC_Nr <- NULL
-perA$unique <- NULL
-perA$Test_Nr <- NULL
-perA$Batch <- as.numeric(perA$Batch)
-perA$Sow <- as.numeric(perA$Sow)
-perA$Subject <- NULL
-id <- perA$ID
-perA$ID <- NULL
-perA <- aggregate(perA, by=list(id), FUN=mean)
-NPT <- Perso_NPT
-NPT$unique <- NULL
-NPT$Test_Nr <- NULL
-NPT$Time <- NULL
-NPT$PCoA1 <- NULL
-NPT$PCoA2 <- NULL
-NPT$Batch <- NULL
-NPT$Sow <- NULL
-id <- NPT$ID
-NPT$ID <- NULL
-NPT <- aggregate(NPT, by=list(id), FUN=mean)
-head(Perso_NPT)
+# We can also do the mean for each time point. This is fine for NPT since time point explains very little of the variance.
+# We will use the first time they are tested
+
+#perA <- perI
+#perA$PVC_Nr <- NULL
+#perA$unique <- NULL
+#perA$Test_Nr <- NULL
+#perA$Batch <- as.numeric(perA$Batch)
+#perA$Sow <- as.numeric(perA$Sow)
+#perA$Subject <- NULL
+#id <- perA$ID
+#perA$ID <- NULL
+#perA <- aggregate(perA, by=list(id), FUN=mean)
+#NPT <- Perso_NPT
+#NPT$unique <- NULL
+#NPT$Test_Nr <- NULL
+#NPT$Time <- NULL
+#NPT$PCoA1 <- NULL
+#NPT$PCoA2 <- NULL
+#NPT$Batch <- NULL
+#NPT$Sow <- NULL
+#id <- NPT$ID
+#NPT$ID <- NULL
+#NPT <- aggregate(NPT, by=list(id), FUN=mean)
+#head(Perso_NPT)
 # and merge
-perA <- merge(perA, NPT, by="Group.1")
+#perA <- merge(perA, NPT, by="Group.1")
 
+Perso <- (cbind(Perso_BIBAGO, Perso_NOT, Perso_OFT, Perso_HAT))
+Perso$ID <- perI$ID
+Perso$Test_Nr <- perI$Test_Nr
+Perso <- Perso[Perso$Test_Nr==1,]
+Perso$Test_Nr <- NULL
+NPT1 <- (Perso_NPT[Perso_NPT$Test_Nr==1,])
+NPT2 <- (Perso_NPT[Perso_NPT$Test_Nr==2,])
+NPT_j <- rbind(NPT2[which(!NPT2$ID %in% NPT1$ID),], NPT1)
+#unique(NPT_j$ID)
+all(NPT_j$ID==Perso$ID)
+NPT_j$ID <- NULL
+NPT_j$Sow <- NULL
+NPT_j$Batch <- NULL
+NPT_j$unique <- NULL
+NPT_j$Test_Nr <- NULL
+Perso <- cbind(Perso, NPT_j)
 
+names(Perso)
+
+#### Correlation matrix of all the behaviours that are kept
+m <- cor(Perso[,-16], method="pearson")
+m <- melt(m)
+names(m) <- c("X", "Y", "value")
+cor_Perso <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
+    geom_tile(color = "white", size = 0.2) +  # Add a white border around each tile
+    geom_text(aes(label = round(value, 2)), color = "white", size = 4) +
+    scale_fill_gradientn(colors = hcl.colors(20, "RdYlGn"), name = "Pearson's rho", labels = scales::comma) +
+    xlab("")+
+    ylab("")+
+    theme_minimal() + 
+    theme(legend.position = "right",  # Position the legend on the right side of the plot
+          axis.text = element_text(size = 10),  # Adjust the size of axis text
+          legend.text = element_text(size = 10),
+          axis.text.x = element_text(angle = 45, hjust = 1)) 
+ggsave("fig/FigureS1.pdf", cor_Perso, width = 220, height = 220, dpi = 300, units="mm")
+
+cor_Perso

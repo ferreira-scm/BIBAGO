@@ -50,6 +50,14 @@ BIBLatS <- glm(Lat~BIS+BAS+Asoc+Shy, data = latK, family=binomial)
 anova(BIBLatS)
 summary(BIBLatS)
 
+Lat_OFT <- glm(Lat~jump_freq+ locom_dur+ OFT_voc_freq+expl_dur, data = latK, family=binomial)
+
+anova(Lat_OFT)
+summary(Lat_OFT)
+
+################################# ##############################################################
+
+
 Lat <- brms::brm(Lat~chew_dur+ freez_dur+ BIBAGO_inter_voc_dur + expl_wob_lat + BIBAGO_voc_freq,
            data = latK,
            family=bernoulli(),
