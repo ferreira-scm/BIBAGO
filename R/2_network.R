@@ -7,12 +7,25 @@ library(igraph)
 source("R/1_data_exploration.R")
 
 net.df <- Perso
-
-names(net.df)
-
 id <- net.df$ID
 net.df$ID <- NULL
 ncol(net.df) # number of nodes
+
+l <- labels[which(labels$Label%in%names(net.df)),]
+
+all(l$Label==names(net.df))
+
+# reordering
+l <- l[match(names(net.df), l$Label),]
+    
+all(l$Label==names(net.df))# santiy check
+
+# adding test and dimension
+Test <- l$Test_name[match(names(net.df), l$Label)]
+Dimension <- l$Hypothesis.dimension[match(names(net.df), l$Label)]
+
+# changing some names here
+names(net.df) <- c("BIBAGO_chew_dur", "BIBAGO_expl_wob_dur", "BIBAGO_freez_dur", "BIBAGO_inter_voc_dur", "BIBAGO_voc_freq", "BIBAGO_choco_eaten", "NOT_expl_obj_dur", "NOT_inter_voc_dur", "OFT_jump_freq", "OFT_locom_dur", "OFT_voc_freq", "OFT_expl_dur", "HAT_expl_hum_lat", "HAT_tail_wagging_freq", "NPT_back_dur", "NPT_middle_dur", "NPT_sudden_display_dur", "NPT_tail_wagging_freq","NPT_turn_back_freq", "NPT_walking_by_fence_dur")
 
 
 net.df <- scale(net.df)
@@ -59,6 +72,12 @@ results.15 <- estimateNetwork(net.df,
                 corMethod="spearman",
                 tuning=0.15)
 
+results.12 <- estimateNetwork(net.df,
+                default="EBICglasso",
+                corMethod="cor",
+                tuning=0.12)
+
+
 results.1 <- estimateNetwork(net.df,
                 default="EBICglasso",
                 corMethod="cor",
@@ -66,33 +85,20 @@ results.1 <- estimateNetwork(net.df,
 
 
 
-
-
 library(igraph)
 
-adjm <- as.matrix(results.19$graph)
+adjm <- as.matrix(results.12$graph)
 net.grph <- graph_from_adjacency_matrix(adjm, mode="undirected", weighted=T)
 edgew <- E(net.grph)$weight
 E(net.grph)$weight <- abs(E(net.grph)$weight)
 
-l <- labels[which(labels$Label%in%names(V(net.grph))),]
-all(l$Label==names(V(net.grph)))
+V(net.grph)$Test <- gsub("_.*", "",  names(V(net.grph)))
 
-# reordering
-l <- l[match(names(V(net.grph)), l$Label),]
-all(l$Label==names(V(net.grph)))# santiy check
-
-# adding test and dimension
-V(net.grph)$Test <- l$Test_name[match(names(V(net.grph)), l$Label)]
-V(net.grph)$Dimension <- l$Hypothesis.dimension[match(names(V(net.grph)), l$Label)]
+V(net.grph)$Dimension <- Dimension
 
 E.color.Uni = edgew
 E.color.Uni = ifelse(E.color.Uni>0, "#00539C",ifelse(E.color.Uni<0, "#EEA47F","grey"))
 E(net.grph)$color = as.character(E.color.Uni)
-
-V(net.grph)$Test
-
-l[match(names(V(net.grph)), l$Label),c(3,4)]
 
 V(net.grph)$Shape <- "0"
 V(net.grph)$Shape[V(net.grph)$Test=="OFT"] <- "square"
@@ -103,11 +109,6 @@ V(net.grph)$Shape[V(net.grph)$Test=="NPT"] <- "circle"
 
 #change edge width
 E(net.grph)$width = abs(edgew)*20
-
-V(net.grph)$Dimension
-
-names(V(net.grph))
-
 
 unique(V(net.grph)$Dimension)
 
@@ -123,14 +124,12 @@ V(net.grph)$color[which(V(net.grph)$Dimension=="Sociability")] <- "#ddb7ac"
 levels(as.factor(V(net.grph)$Dimension))
 col <- c("#99D3CF", "#ffc300","#F93822FF","#be99ea", "#5e8d5e", "#ddb7ac") #these need to match
 
-V(net.grph)$name <- gsub("OFT_", "", V(net.grph)$name)
-V(net.grph)$name <- gsub("NPT_", "", V(net.grph)$name)
-V(net.grph)$name <- gsub("HAT_", "", V(net.grph)$name)
-V(net.grph)$name <- gsub("_", " ", V(net.grph)$name)
+#V(net.grph)$name <- gsub("OFT_", "", V(net.grph)$name)
+#V(net.grph)$name <- gsub("NPT_", "", V(net.grph)$name)
+#V(net.grph)$name <- gsub("HAT_", "", V(net.grph)$name)
+#V(net.grph)$name <- gsub("_", " ", V(net.grph)$name)
 
-V(net.grph)$name
-
-pdf("fig/Network_19.pdf",
+pdf("fig/Network_12.pdf",
                 width =8, height = 8)
 set.seed(123)
 plot(net.grph,layout=layout.fruchterman.reingold,
@@ -152,7 +151,7 @@ oc <- cluster_edge_betweenness(net.grph)
 
 oc <- cluster_walktrap(net.grph)
 
-pdf("fig/Network_19_cluster.pdf",
+pdf("fig/Network_12_cluster.pdf",
                 width =8, height = 8)
 set.seed(123)
 plot(oc, net.grph, layout=layout.fruchterman.reingold,
@@ -168,11 +167,11 @@ dev.off()
 
 print(modularity(oc))
 
-head(centrality(results.19))
+head(centrality(results.12))
 
-centralityPlot(results.19, include = c("Degree","Strength","Betweenness", "Closeness"))
+centralityPlot(results.12, include = c("Degree","Strength","Betweenness", "Closeness"))
 
-bootnet_case_dropping <- bootnet(results.19,
+bootnet_case_dropping <- bootnet(results.12,
                                        nBoots = 2500,
                                        type = "case",
                                        nCores = 10,
@@ -183,45 +182,3 @@ bootnet_case_dropping <- bootnet(results.19,
 
 plot(bootnet_case_dropping, 'all')
 
-
-dim(net.df)
-
-str(net.df)
-
-histogram(net.df$locom_freq)
-
-#net.df$bias_w <- as.integer(net.df$bias_w)
-#net.df$bias_t <- as.integer(net.df$bias_t)
-#net.df$bias_f <- as.integer(net.df$bias_f)
-
-#net.type <- c("c", "p", "g", "p", "p", "g", "p", "g", "g", "g", "p", "g", "p", "g", "p", "g", "g", "p", "p", "g", "p", "p", "g", "g", "p", "p", "g", "c", "g", "c", "g", "c")
-
-#net.level <- c(5, rep(1, 26), 3, 1, 2, 1, 3)
-
-fit.net <- mgm(data=as.matrix(net.df), type=net.type, level=net.level, k=2, lambdaSel="EBIC", lambdaGam=0.25, pbar=FALSE)
-
-qgraph(input=fit.net$pairwise$wadj,
-       nodeName=colnames(net.df))
-
-colnames(net.df)
-
-fit.net2 <- mgm(data=as.matrix(net.df), type=net.type, level=net.level, k=2, lambdaSel="EBIC", lambdaGam=0.4, pbar=FALSE)
-
-### network with the only tests
-
-### network with just bibago and laterality
-
-fit.net
-
-
-summary(fit.net)
-
-length(net.type)
-length(net.level)
-
-
-results <- estimateNetwork(
-
-
-    fit.net
-    
