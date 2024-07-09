@@ -145,10 +145,6 @@ dev.off()
 
 net.grph
 
-oc <- cluster_optimal(net.grph)
-
-oc <- cluster_edge_betweenness(net.grph)
-
 oc <- cluster_walktrap(net.grph)
 
 pdf("fig/Network_12_cluster.pdf",

@@ -12,29 +12,25 @@ do_rptR <- FALSE
 
 # cleaning labels
 labels <- read.csv("data/Labels_21032024.csv") # varialble and test labels
-
-head(labels)
-
 labels[labels$Hypothesis.dimension%in%"BAS",]
-
 labels[labels$Hypothesis.dimension%in%"BIS",]
-
 labels[labels$Hypothesis.dimension%in%"Sociability",]
-
 labels[labels$Hypothesis.dimension%in%"Exploration",]
-
 labels[labels$Hypothesis.dimension%in%"Boldness",]
-
 
 #some adjustments
 labels$Importance[labels$Label%in%c("HAT_touching_not_visible_freq")] <- 0
 labels$Importance[labels$Label=="HAT_pig_not_visible_dur"] <- 0
+labels$Importance[labels$Label%in%c("NPT_facing_fence_dur")] <- 0
+labels$Importance[labels$Label%in%c("NPT_facing_fence_freq")] <- 0
+
 #labels[which(labels$Label%in%"NPT_latency_nose_nose_dur"),]
 uni <- data.frame(Importance=c(1,1), Test_name=c(NA, NA), Hypothesis.dimension=c(NA, NA), Label=c("unique", "ID"))
 labels <- rbind(labels, uni)
 labels <- labels[labels$Importance==1,] # we only analyse the important stuff
 
 if(do_dataPrep){
+
 # loading datasets
 lat.df <- read.csv("data/laterality_dataset.csv")
 per1.df <- read.csv("data/perso_datasets.csv")
@@ -173,10 +169,6 @@ sanity <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
           axis.text.x = element_text(angle = 45, hjust = 1)) 
 # looks good
 
-    # removing these variables because they are composite
-per.df$NPT_facing_fence_dur <- NULL
-per.df$NPT_facing_fence_freq <- NULL
-
 #save
     saveRDS(perI, "tmp/perI.rds")
     saveRDS(per.df, "tmp/per.df.rds")
@@ -191,9 +183,6 @@ perC <- readRDS("tmp/perC.rds")
 latI <- readRDS("tmp/latI.rds")
 lat.df <- readRDS("tmp/lat.df.rds")
 
-head(per.df)
-
-
 # separating dataframes for each test
 Perso_BIBAGO <- perI[,names(perI)%in%labels$Label[labels$Test_name%in%"BIBAGO"]]
 Perso_NOT <- perI[,names(perI)%in%labels$Label[labels$Test_name%in%"NOT"]]
@@ -202,9 +191,13 @@ Perso_HAT <-perI[,names(perI)%in%labels$Label[labels$Test_name%in%"HAT"]]
 Perso_NPT <-per.df[,names(per.df)%in% c(labels$Label[labels$Test_name%in%"NPT"], "unique", "Batch", "Sow", "Test_Nr", "ID")] # we take this one from the non imputed dataset, 20 animals missing.
 
 names(Perso_BIBAGO)
+
 names(Perso_NOT)
+
 names(Perso_OFT)
+
 names(Perso_HAT)
+
 names(Perso_NPT)
 
 Perso_NPT <- na.omit(Perso_NPT)
@@ -212,103 +205,91 @@ Perso_NPT <- na.omit(Perso_NPT)
 ## question 1: are personality behaviours consistent over time?
 ### consistency for each predictor
 if(do_rptR){
-names(Perso_BIBAGO)
-Rchew_dur <- rpt(chew_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-Rexpl_wob_dur <- rpt(expl_wob_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-Rfreez_dur <- rpt(freez_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-RBIBAGO_inter_voc_dur<-rpt(BIBAGO_inter_voc_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-Rexpl_wob_lat <- rpt(expl_wob_lat~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-RBIBAGO_voc_freq <- rpt(BIBAGO_voc_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-Rchoco_eaten <- rpt(choco_eaten~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    names(Perso_BIBAGO)
+    Rchew_dur <- rpt(chew_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    Rexpl_wob_dur <- rpt(expl_wob_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    Rfreez_dur <- rpt(freez_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    RBIBAGO_inter_voc_dur<-rpt(BIBAGO_inter_voc_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    Rexpl_wob_lat <- rpt(expl_wob_lat~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    RBIBAGO_voc_freq <- rpt(BIBAGO_voc_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    Rchoco_eaten <- rpt(choco_eaten~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
 
-Rchew_dur
-Rexpl_wob_dur
-Rfreez_dur
-RBIBAGO_inter_voc_dur
-Rexpl_wob_lat # NOT REPEATABLE
-RBIBAGO_voc_freq
-Rchoco_eaten
-
+    Rchew_dur
+    Rexpl_wob_dur
+    Rfreez_dur
+    RBIBAGO_inter_voc_dur
+    Rexpl_wob_lat # NOT REPEATABLE
+    RBIBAGO_voc_freq
+    Rchoco_eaten
 
 names(Perso_NOT)
 
-Rexpl_obj_dur<-rpt(expl_obj_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-Rexpl_obj_freq <- rpt(expl_obj_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-RNOT_inter_voc_dur <- rpt(NOT_inter_voc_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-Rlat_expl_obj_dur <- rpt(lat_expl_obj_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    Rexpl_obj_dur<-rpt(expl_obj_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    Rexpl_obj_freq <- rpt(expl_obj_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    RNOT_inter_voc_dur <- rpt(NOT_inter_voc_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    Rlat_expl_obj_dur <- rpt(lat_expl_obj_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
 
-Rexpl_obj_dur
-Rexpl_obj_freq # not significant but also not 0
-RNOT_inter_voc_dur
-Rlat_expl_obj_dur # NOT REPEATABLE
+    Rexpl_obj_dur
+    Rexpl_obj_freq # not significant but also not 0
+    RNOT_inter_voc_dur
+    Rlat_expl_obj_dur # NOT REPEATABLE
 
-names(Perso_HAT)
+    names(Perso_HAT)
 
-RHAT_exploration_human_dur<-rpt(HAT_exploration_human_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-RHAT_jumping_freq <- rpt(HAT_jumping_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-RHAT_latency_to_touch_the_human_dur <- rpt(HAT_latency_to_touch_the_human_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
-RHAT_tail_wagging_freq <- rpt(HAT_tail_wagging_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    RHAT_exploration_human_dur<-rpt(HAT_exploration_human_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    RHAT_jumping_freq <- rpt(HAT_jumping_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    RHAT_latency_to_touch_the_human_dur <- rpt(HAT_latency_to_touch_the_human_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+    RHAT_tail_wagging_freq <- rpt(HAT_tail_wagging_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
 
-RHAT_exploration_human_dur # NOT REPEATABLE
-RHAT_jumping_freq #NOT REPEATABLE
+    RHAT_exploration_human_dur # NOT REPEATABLE
+    RHAT_jumping_freq #NOT REPEATABLE
     RHAT_latency_to_touch_the_human_dur
     RHAT_tail_wagging_freq
 
-names(Perso_OFT)
+    names(Perso_OFT)
+    
 Rjump_freq<-rpt(jump_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
 Rlocom_dur<-rpt(locom_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
 ROFT_voc_freq <- rpt(OFT_voc_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
+ROFT_expl_dur <- rpt(expl_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=perI)
 
 Rjump_freq # NOT REPEATABLE
 Rlocom_dur # NOT REPEATABLE
 ROFT_voc_freq # NOT REPEATABLE
-
+ROFT_expl_dur
+    
 names(Perso_NPT)
 
-RNPT_latency_nose_nose_dur<-rpt(NPT_latency_nose_nose_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_nose_nose_freq<-rpt(NPT_nose_nose_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_back_dur<-rpt(NPT_back_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_climbing_freq<-rpt(NPT_climbing_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_facing_fence_dur<-rpt(NPT_facing_fence_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_facing_fence_freq<-rpt(NPT_facing_fence_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_front_freq<-rpt(NPT_front_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_latency_front_dur<-rpt(NPT_latency_front_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_middle_dur<-rpt(NPT_middle_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_sudden_display_dur<-rpt(NPT_sudden_display_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_tail_wagging_freq<-rpt(NPT_tail_wagging_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_turn_back_freq<-rpt(NPT_turn_back_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
-RNPT_walking_by_fence_dur<-rpt(NPT_walking_by_fence_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_latency_nose_nose_dur<-rpt(NPT_latency_nose_nose_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_nose_nose_freq<-rpt(NPT_nose_nose_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_back_dur<-rpt(NPT_back_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_climbing_freq<-rpt(NPT_climbing_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_front_freq<-rpt(NPT_front_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_latency_front_dur<-rpt(NPT_latency_front_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_middle_dur<-rpt(NPT_middle_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_sudden_display_dur<-rpt(NPT_sudden_display_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_tail_wagging_freq<-rpt(NPT_tail_wagging_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_turn_back_freq<-rpt(NPT_turn_back_freq~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
+    RNPT_walking_by_fence_dur<-rpt(NPT_walking_by_fence_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=Perso_NPT)
 
-RNPT_latency_nose_nose_dur # NOT REPEATABLE 
-RNPT_nose_nose_freq # NOT REPEATABLE 
-RNPT_back_dur
-RNPT_climbing_freq # NOT REPEATABLE
-RNPT_facing_fence_dur
-RNPT_facing_fence_freq
-RNPT_front_freq # NOT REPEATABLE
-RNPT_latency_front_dur # NOT REPEATABLE
-RNPT_middle_dur
-RNPT_sudden_display_dur
-RNPT_tail_wagging_freq
-RNPT_turn_back_freq
-RNPT_walking_by_fence_dur
-## those are not repeatable but we keep them
-expl_obj_freq # NOT
-lat_expl_obj_dur # NOT
-HAT_exploration_human_dur # HAT
-HAT_jumping_freq #HAT
-NPT_latency_nose_nose_dur # NPT
-NPT_nose_nose_freq # NPT 
-NPT_climbing_freq # NPT
-NPT_front_freq # NPT
-NPT_latency_front_dur # NPT
-## we keep all OFT
+    RNPT_latency_nose_nose_dur # NOT REPEATABLE 
+    RNPT_nose_nose_freq # NOT REPEATABLE 
+    RNPT_back_dur
+    RNPT_climbing_freq # NOT REPEATABLE
+    RNPT_front_freq # NOT REPEATABLE
+    RNPT_latency_front_dur # NOT REPEATABLE
+    RNPT_middle_dur
+    RNPT_sudden_display_dur
+    RNPT_tail_wagging_freq
+    RNPT_turn_back_freq
+    RNPT_walking_by_fence_dur
 }
 
 
 Perso_NOT <- Perso_NOT[,!names(Perso_NOT)%in%c("expl_obj_freq", "lat_expl_obj_dur")]
 Perso_HAT <-Perso_HAT[, !names(Perso_HAT)%in%c("HAT_exploration_human_dur", "HAT_jumping_freq")]
 Perso_NPT <-Perso_NPT[, !names(Perso_NPT)%in%c("NPT_latency_nose_nose_dur", "NPT_nose_nose_freq", "NPT_climbing_freq", "NPT_front_freq", "NPT_latency_front_dur")]
+Perso_BIBAGO <-Perso_BIBAGO[, !names(Perso_BIBAGO)%in%c("expl_wob_lat")]
 
 names(Perso_BIBAGO)
 names(Perso_NOT)
@@ -331,77 +312,47 @@ Perso_NPT$ID <- as.factor(Perso_NPT$ID)
 
 if (do_PERMANOVA){
 # permanovas to test the effect of timepoint
-
-adonis2(bib_dis~
+print(adonis2(bib_dis~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
-        by="margin")
+        by="margin"))
 
-adonis2(not_dis~
+print(adonis2(not_dis~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
-        by="margin") # no difference of test?
+        by="margin"))
 
-adonis2(hat_dis~
+print(adonis2(hat_dis~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
-        by="margin") # no difference of test?
+        by="margin"))
 
-adonis2(oft_dis~
+print(adonis2(oft_dis~
             perI$Test_Nr+
             perI$Sow+
             perI$Batch,
-        by="margin") # no difference of test?
+        by="margin"))
 
-adonis2(npt_dis~
+print(adonis2(npt_dis~
             Perso_NPT$Test_Nr+
             Perso_NPT$Sow+
             Perso_NPT$Batch,
-        by="margin") # no difference of test?
-
+        by="margin"))
 }
 
 ################### using distance based ICC.
-dICC(bib_dis, strata=perI$ID)
-dICC(not_dis, strata=perI$ID)
-dICC(oft_dis, strata=perI$ID)
-dICC(hat_dis, strata=perI$ID)
-dICC(npt_dis, strata=Perso_NPT$ID)
-
+dICC.SE.bt(as.matrix(bib_dis), strata=perI$ID, B=1000)
+dICC.SE.bt(as.matrix(oft_dis), strata=perI$ID, B=1000)
+dICC.SE.bt(as.matrix(hat_dis), strata=perI$ID, B=1000)
+dICC.SE.bt(as.matrix(npt_dis), strata=Perso_NPT$ID, B=1000)
+dICC.SE.bt(as.matrix(not_dis), strata=perI$ID, B=1000)
 
 ################# now we need to make some decisions,
 # NPT has missing data from animals of one batch and one time point
-# what do we do? Either we remove those animals and have smaller dataset.
-# We can also do the mean for each time point. This is fine for NPT since time point explains very little of the variance.
-# We will use the first time they are tested
-
-#perA <- perI
-#perA$PVC_Nr <- NULL
-#perA$unique <- NULL
-#perA$Test_Nr <- NULL
-#perA$Batch <- as.numeric(perA$Batch)
-#perA$Sow <- as.numeric(perA$Sow)
-#perA$Subject <- NULL
-#id <- perA$ID
-#perA$ID <- NULL
-#perA <- aggregate(perA, by=list(id), FUN=mean)
-#NPT <- Perso_NPT
-#NPT$unique <- NULL
-#NPT$Test_Nr <- NULL
-#NPT$Time <- NULL
-#NPT$PCoA1 <- NULL
-#NPT$PCoA2 <- NULL
-#NPT$Batch <- NULL
-#NPT$Sow <- NULL
-#id <- NPT$ID
-#NPT$ID <- NULL
-#NPT <- aggregate(NPT, by=list(id), FUN=mean)
-#head(Perso_NPT)
-# and merge
-#perA <- merge(perA, NPT, by="Group.1")
+# We will use the first time they are tested, and for the few animals of NPT (batch1) we will use the time point 2. this is fine since the behaviours have high repeatability
 
 Perso <- (cbind(Perso_BIBAGO, Perso_NOT, Perso_OFT, Perso_HAT))
 Perso$ID <- perI$ID
@@ -410,8 +361,9 @@ Perso <- Perso[Perso$Test_Nr==1,]
 Perso$Test_Nr <- NULL
 NPT1 <- (Perso_NPT[Perso_NPT$Test_Nr==1,])
 NPT2 <- (Perso_NPT[Perso_NPT$Test_Nr==2,])
+all(NPT1$ID==NPT2$ID)
 NPT_j <- rbind(NPT2[which(!NPT2$ID %in% NPT1$ID),], NPT1)
-#unique(NPT_j$ID)
+
 all(NPT_j$ID==Perso$ID)
 NPT_j$ID <- NULL
 NPT_j$Sow <- NULL
@@ -423,9 +375,10 @@ Perso <- cbind(Perso, NPT_j)
 names(Perso)
 
 #### Correlation matrix of all the behaviours that are kept
-m <- cor(Perso[,-16], method="pearson")
+m <- cor(Perso[,-15], method="pearson")
 m <- melt(m)
 names(m) <- c("X", "Y", "value")
+
 cor_Perso <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
     geom_tile(color = "white", size = 0.2) +  # Add a white border around each tile
     geom_text(aes(label = round(value, 2)), color = "white", size = 4) +
@@ -437,6 +390,7 @@ cor_Perso <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
           axis.text = element_text(size = 10),  # Adjust the size of axis text
           legend.text = element_text(size = 10),
           axis.text.x = element_text(angle = 45, hjust = 1)) 
-ggsave("fig/FigureS1.pdf", cor_Perso, width = 220, height = 220, dpi = 300, units="mm")
+ggsave("fig/FigureS1.pdf", cor_Perso, width = 300, height = 220, dpi = 300, units="mm")
 
 cor_Perso
+
