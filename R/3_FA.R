@@ -83,7 +83,7 @@ fe <- fa.extension(Roe, fo)
 
 fe
 
-pdf("fig/FA.pdf", width=4, height=4)
+pdf("fig/FA.pdf", width=6, height=8)
 fa.diagram(fo, fe=fe)
 dev.off()
 
