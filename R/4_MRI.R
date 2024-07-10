@@ -1,4 +1,10 @@
 library(mice)
+library(vegan)
+library(VIM)
+library(reshape)
+library(ggplot2)
+library("GUniFrac", lib="/usr/local/lib/R/site-library")
+library(rptR)
 
 mri <- read.csv("data/BIBAGO_MRI_dataset.csv")
 
@@ -11,6 +17,7 @@ mri <- mri[!is.na(mri$Pen),]
 pMiss <- function(x){sum(is.na(x))/length(x)*100}
 
 apply(mri,2,pMiss) # no variable with more than 10% misssing data.
+
 apply(mri,1,pMiss)
 
 # now we save
@@ -28,9 +35,12 @@ mriI[,8:17]
 mriI$ID <- as.factor(mriI$PVC_Nr)
 str(mri$PVC_Nr)
 
-str(mriI)
+unique(mriI$ID)
+
+summary(mriI$ID)
 
 names(mriI)
+
 Rexpl_wob_dur <- rpt(expl_wob_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
 
 Rfreez_dur <- rpt(freez_dur~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
@@ -40,23 +50,20 @@ RBIBAGO_voc_freq <- rpt(BIBAGO_voc_freq~(1|ID), grname="ID", datatype="Gaussian"
 Rchoco_eaten <- rpt(choco_eaten~(1|ID), grname="ID", datatype="Gaussian", nboot=1000, data=mriI)
 
 Rfreez_dur
-RBIBAGO_inter_voc_dur
-Rexpl_wob_lat
-RBIBAGO_voc_freq
-Rchoco_eaten
+print(RBIBAGO_inter_voc_dur, digits=3)
+print(Rexpl_wob_lat, digits=3)
+print(RBIBAGO_voc_freq, digits=3)
+print(Rchoco_eaten, digits=3)
+print(Rexpl_wob_dur, digits=3)
 
-
-bib_dis <- vegdist(mriI[,8:17], method="aitchison", pseudocount=1)
-
-dICC(bib_dis, strata=mriI$PVC_Nr)
-
-
+bib_dis <- vegdist(mriI[,8:17], method="euclidean")
+dICC.SE.bt(as.matrix(bib_dis), strata=mriI$ID, B=1000)
 
 adonis2(bib_dis~
             mriI$Test_Nr+
             mriI$Sow+
             mriI$Batch,
-        strata=mriI$PVC_Nr,
+        strata=mriI$ID,
         by="margin") # no difference of test?
 
 adonis2(bib_dis~
@@ -64,30 +71,3 @@ adonis2(bib_dis~
         by="margin") # no difference of test?
 
 
-net.df <- mriI
-
-net.df <- net.df[,8:17]
-
-net.df$no_expl_wob_dur <- NULL
-net.df$no_expl_wob_freq <- NULL
-net.df$expl_wob_freq <- NULL
-net.df$freez_freq <- NULL
-
-names(Perso_BIBAGO)
-
-names(net.df)
-
-
-
-id <- mriI$PCV_Nr
-
-ncol(net.df) # number of nodes
-
-############ first a simple network
-results.MRI <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.19)
-
-
-plot(results.MRI)

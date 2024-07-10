@@ -127,5 +127,4 @@ library(cowplot)
 BC <- cowplot::plot_grid(Fig3B, Fig3C, labels=c("B", "C"))
 
 Fig3 <- cowplot::plot_grid(Fig3A, BC, ncol=1, labels=c("A", ""), rel_heights=c(2,1))
-
 ggsave("fig/Figure3.pdf", Fig3, width = 180, height = 180, dpi = 300, units="mm")
