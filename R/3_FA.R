@@ -98,6 +98,11 @@ names(latK)
 
 BIBLatS <- glm(Lat~PA1+PA2, data = latK, family=binomial)
 
+## Bonus
+BIBBAS_OFT <- glm(Lat~OFT_voc_freq, data = latK, family=binomial)
+summary(BIBBAS_OFT)
+anova(BIBBAS_OFT)
+
 anova(BIBLatS)
 summary(BIBLatS)
 
