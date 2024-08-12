@@ -31,59 +31,10 @@ names(net.df) <- c("BIBAGO_chew_dur", "BIBAGO_expl_wob_dur", "BIBAGO_freez_dur",
 net.df <- scale(net.df)
 
 ############ first a simple network
-results.5 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.5)
-
-results.4 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.4)
-
-results.3 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.3)
-
-results.2 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.2)
-
-results.25 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.25)
-
-results.19 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="cor",
-                tuning=0.19)
-
-results.18 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.18)
-
-
-results.15 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="spearman",
-                tuning=0.15)
-
 results.12 <- estimateNetwork(net.df,
                 default="EBICglasso",
                 corMethod="cor",
                 tuning=0.12)
-
-
-results.1 <- estimateNetwork(net.df,
-                default="EBICglasso",
-                corMethod="cor",
-                tuning=0.1)
-
-
 
 library(igraph)
 
@@ -131,6 +82,7 @@ col <- c("#99D3CF", "#ffc300","#F93822FF","#be99ea", "#5e8d5e", "#ddb7ac") #thes
 
 pdf("fig/Network_12.pdf",
                 width =8, height = 8)
+
 set.seed(123)
 plot(net.grph,layout=layout.fruchterman.reingold,
      vertex.label.color="black",

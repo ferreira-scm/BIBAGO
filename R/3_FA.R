@@ -70,18 +70,18 @@ library(tidyverse)
 
 centroids <- as_tibble(km$centers, rownames="cluster")
 
-centroids# cluster 1 is RR and cluster 4 is LL
+centroids# cluster 3 is RR and cluster 2 is LL
 
 latS$km <- as.factor(km$cluster)
 
-latK <- latS[latS$km%in%c("1", "4"),]
+latK <- latS[latS$km%in%c("2", "3"),]
 
 # just to make it pretty, I want a variable with 0 and 1
-latK$Lat[latK$km==1] <- 1
-latK$Lat[latK$km==4] <- 0
+latK$Lat[latK$km==2] <- 0
+latK$Lat[latK$km==3] <- 1
 
-latK$Lat2[latK$km==1] <- "Right"
-latK$Lat2[latK$km==4] <- "Left"
+latK$Lat2[latK$km==3] <- "Right"
+latK$Lat2[latK$km==2] <- "Left"
 
 
 ggplot(latK, aes(LI_f, LI_t, colour=km))+geom_point()
@@ -89,22 +89,64 @@ ggplot(latK, aes(LI_f, LI_t, colour=km))+geom_point()
 #df <- df[, c("chew_dur", "freez_dur", "BIBAGO_inter_voc_dur", "expl_wob_lat", "BIBAGO_voc_freq")]
 
 ##### compare only LL and RR #####
-
 names(latK)
+
+summary(as.factor(latK$Lat2))
 
 #BIBLat <- glm(Lat~chew_dur+ freez_dur+ expl_wob_dur+BIBAGO_inter_voc_dur + BIBAGO_voc_freq+choco_eaten, data = latK, family=binomial)
 #anova(BIBLat)
 #summary(BIBLat)
 
+library(brms)
+
+library(scales)
+
+latK$PA1_s <- rescale(latK$PA1)
+latK$PA2_s <- rescale(latK$PA2)
+latK$OFT_voc_freq_s <- rescale(latK$OFT_voc_freq)
+
+latK$expl_obj_dur_s <- rescale(latK$expl_obj_dur)
+
+names(latK)
+
+Lat.m <- brm(Lat~PA1_s+PA2_s+OFT_voc_freq_s+expl_obj_dur_s, data = latK, family=bernoulli)
+
+summary(Lat.m)
+
+library(marginaleffects)
+
+Char1 <- plot_predictions(Lat.m, condition="OFT_voc_freq_s")+
+    theme_classic()
+
+
+Char2 <- plot_predictions(Lat.m, condition="expl_obj_dur_s")+
+    theme_classic()
+
+
+Char3 <- plot_predictions(Lat.m, condition="PA2_s")+
+    theme_classic()
+
+Char4 <- plot_predictions(Lat.m, condition="PA1_s")+
+    theme_classic()
+
+library(cowplot)
+
+Lat_Ten <- plot_grid(Char1, Char2, Char3, Char4)
+
+ggsave("fig/Lat_tendencies.pdf", Lat_Ten, width = 180, height = 180, dpi = 300, units="mm")
+
+       
 BIBLatS <- glm(Lat~PA1+PA2, data = latK, family=binomial)
-
-## Bonus
-BIBBAS_OFT <- glm(Lat~OFT_voc_freq, data = latK, family=binomial)
-summary(BIBBAS_OFT)
-anova(BIBBAS_OFT)
-
 anova(BIBLatS)
 summary(BIBLatS)
+
+## Bonus
+BIBBAS_OFT <- glm(Lat~PA1_s+PA2_s+OFT_voc_freq_s, data = latK, family=quasibinomial)
+
+summary(BIBBAS_OFT)
+
+anova(BIBBAS_OFT, test="LRT")
+
 
 Fig3A <- ggplot(BisBas_scores, aes(PA1, PA2))+
     geom_point(size=4, alpha=0.6)+
