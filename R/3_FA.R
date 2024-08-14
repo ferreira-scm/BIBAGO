@@ -109,17 +109,13 @@ latK$expl_obj_dur_s <- rescale(latK$expl_obj_dur)
 
 names(latK)
 
-Lat.m <- brm(Lat~PA1_s+PA2_s+OFT_voc_freq_s+expl_obj_dur_s, data = latK, family=bernoulli)
+Lat.m <- brm(Lat~PA1_s+PA2_s+OFT_voc_freq_s, data = latK, family=bernoulli)
 
 summary(Lat.m)
 
 library(marginaleffects)
 
 Char1 <- plot_predictions(Lat.m, condition="OFT_voc_freq_s")+
-    theme_classic()
-
-
-Char2 <- plot_predictions(Lat.m, condition="expl_obj_dur_s")+
     theme_classic()
 
 
@@ -135,21 +131,11 @@ Lat_Ten <- plot_grid(Char1, Char2, Char3, Char4)
 
 ggsave("fig/Lat_tendencies.pdf", Lat_Ten, width = 180, height = 180, dpi = 300, units="mm")
 
-       
-BIBLatS <- glm(Lat~PA1+PA2, data = latK, family=binomial)
-anova(BIBLatS)
-summary(BIBLatS)
-
-## Bonus
-BIBBAS_OFT <- glm(Lat~PA1_s+PA2_s+OFT_voc_freq_s, data = latK, family=quasibinomial)
-
-summary(BIBBAS_OFT)
-
-anova(BIBBAS_OFT, test="LRT")
-
-
+library(ggpmisc)       
 Fig3A <- ggplot(BisBas_scores, aes(PA1, PA2))+
     geom_point(size=4, alpha=0.6)+
+    stat_poly_line() +
+          stat_poly_eq() +
     theme_classic()
 
 Fig3B <- ggplot(latK, aes(Lat2, PA1, colour=Lat2))+
@@ -169,9 +155,17 @@ Fig3C <- ggplot(latK, aes(Lat2, PA2, colour=Lat2))+
     guides(color = "none", size = "none")+
     theme_classic()
 
+Fig3D <- ggplot(latK, aes(Lat2, OFT_voc_freq, colour=Lat2))+
+    geom_boxplot(outlier.shape = NA)+
+    geom_jitter(width=0.2, height=NULL, size=4, alpha=0.6)+
+    labs(x="Laterality", y="voc freq")+
+    scale_colour_manual(values=c("#FFC107", "#004D40"))+
+    guides(color = "none", size = "none")+
+    theme_classic()
+
 library(cowplot)
 
-BC <- cowplot::plot_grid(Fig3B, Fig3C, labels=c("B", "C"))
+BC <- cowplot::plot_grid(Fig3B, Fig3C, Fig3D, labels=c("B", "C", "D"))
 
 Fig3 <- cowplot::plot_grid(Fig3A, BC, ncol=1, labels=c("A", ""), rel_heights=c(2,1))
 ggsave("fig/Figure3.pdf", Fig3, width = 180, height = 180, dpi = 300, units="mm")
