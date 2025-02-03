@@ -202,6 +202,123 @@ names(Perso_NPT)
 
 Perso_NPT <- na.omit(Perso_NPT)
 
+
+#### different personality tests: bibago, open field, etc.
+## compute distances of behaviours within each test
+library(vegan)
+bib_dis <- vegdist(scale(Perso_BIBAGO), method="euclidean")
+not_dis <- vegdist(scale(Perso_NOT), method="euclidean")
+oft_dis <- vegdist(scale(Perso_OFT), method="euclidean")
+hat_dis <- vegdist(scale(Perso_HAT), method="euclidean")
+npt_dis <- vegdist(scale(Perso_NPT[,!names(Perso_NPT)%in%c("unique", "Batch", "Sow", "Test_Nr","ID")]), method="euclidean")
+
+Perso_NPT$Sow <- as.factor(Perso_NPT$Sow)
+Perso_NPT$Batch <- as.factor(Perso_NPT$Batch)
+Perso_NPT$ID <- as.factor(Perso_NPT$ID)
+
+if (do_PERMANOVA){
+# permanovas to test the effect of timepoint
+print(adonis2(bib_dis~
+            perI$Test_Nr+
+            perI$Sow+
+            perI$Batch,
+        by="margin"))
+
+print(adonis2(not_dis~
+            perI$Test_Nr+
+            perI$Sow+
+            perI$Batch,
+        by="margin"))
+
+print(adonis2(hat_dis~
+            perI$Test_Nr+
+            perI$Sow+
+            perI$Batch,
+        by="margin"))
+
+print(adonis2(oft_dis~
+            perI$Test_Nr+
+            perI$Sow+
+            perI$Batch,
+        by="margin"))
+
+print(adonis2(npt_dis~
+            Perso_NPT$Test_Nr+
+            Perso_NPT$Sow+
+            Perso_NPT$Batch,
+        by="margin"))
+}
+
+
+#### doing PCA for each test
+pca_BIB <- prcomp(Perso_BIBAGO, scale=TRUE)
+pca_NPT <- prcomp(Perso_NPT[,!names(Perso_NPT)%in%c("unique", "Batch", "Sow", "Test_Nr","ID")], scale=TRUE)
+pca_OFT <- prcomp(Perso_OFT, scale=TRUE)
+pca_HAT <- prcomp(Perso_HAT, scale=TRUE)
+pca_NOT <- prcomp(Perso_NOT, scale=TRUE)
+
+library(ggfortify)
+
+pca_df <- as.data.frame(pca_BIB$x)[,c(1,2)]
+names(pca_df) <- c("bib1", "bib2")
+pca_df$Time <- as.factor(perI$Test_Nr)
+pca_df$OFT1 <- pca_OFT$x[,1]
+pca_df$OFT2 <- pca_OFT$x[,2]
+pca_df$HAT1 <- pca_HAT$x[,1]
+pca_df$HAT2 <- pca_HAT$x[,2]
+pca_df$NOT1 <- pca_NOT$x[,1]
+pca_df$NOT2 <- pca_NOT$x[,2]
+
+npt_df <- as.data.frame(pca_NPT$x[,c(1,2)])
+npt_df$Time <- as.factor(Perso_NPT$Test_Nr)
+
+nptPCA <- ggplot(npt_df, aes(PC1, PC2, colour=Time))+
+    geom_point(size=2)+
+    stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
+    scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
+    scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
+    theme_classic()
+
+bibPCA <- ggplot(pca_df, aes(bib1, bib2, colour=Time))+
+    geom_point(size=2)+
+    stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
+    scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
+    scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
+    theme_classic()
+
+oftPCA <- ggplot(pca_df, aes(OFT1, OFT2, colour=Time))+
+    geom_point(size=2)+
+    stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
+    scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
+    scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
+    theme_classic()
+
+hatPCA <- ggplot(pca_df, aes(HAT1, HAT2, colour=Time))+
+    geom_point(size=2)+
+    stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
+    scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
+    scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
+    theme_classic()
+
+notPCA <- ggplot(pca_df, aes(NOT1, NOT2, colour=Time))+
+    geom_point(size=2)+
+    stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
+    scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
+    scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
+    theme_classic()
+
+library(cowplot)
+
+Fig_S2 <- plot_grid(bibPCA, nptPCA, hatPCA, notPCA, oftPCA, labels="auto")
+ggsave("fig/FigureS2.pdf", Fig_S2, width = 200, height = 200, dpi = 300, units="mm")
+
+################### using distance based ICC.
+dICC.SE.bt(as.matrix(bib_dis), strata=perI$ID, B=1000)
+dICC.SE.bt(as.matrix(oft_dis), strata=perI$ID, B=1000)
+dICC.SE.bt(as.matrix(hat_dis), strata=perI$ID, B=1000)
+dICC.SE.bt(as.matrix(npt_dis), strata=Perso_NPT$ID, B=1000)
+dICC.SE.bt(as.matrix(not_dis), strata=perI$ID, B=1000)
+
 ## question 1: are personality behaviours consistent over time?
 ### consistency for each predictor
 if(do_rptR){
@@ -297,58 +414,6 @@ names(Perso_OFT)
 names(Perso_HAT)
 names(Perso_NPT)
 
-#### different personality tests: bibago, open field, etc.
-## seel it as a good one (bibago)
-library(vegan)
-bib_dis <- vegdist(scale(Perso_BIBAGO), method="euclidean")
-not_dis <- vegdist(scale(Perso_NOT), method="euclidean")
-oft_dis <- vegdist(scale(Perso_OFT), method="euclidean")
-hat_dis <- vegdist(scale(Perso_HAT), method="euclidean")
-npt_dis <- vegdist(scale(Perso_NPT[,!names(Perso_NPT)%in%c("unique", "Batch", "Sow", "Test_Nr","ID")]), method="euclidean")
-
-Perso_NPT$Sow <- as.factor(Perso_NPT$Sow)
-Perso_NPT$Batch <- as.factor(Perso_NPT$Batch)
-Perso_NPT$ID <- as.factor(Perso_NPT$ID)
-
-if (do_PERMANOVA){
-# permanovas to test the effect of timepoint
-print(adonis2(bib_dis~
-            perI$Test_Nr+
-            perI$Sow+
-            perI$Batch,
-        by="margin"))
-
-print(adonis2(not_dis~
-            perI$Test_Nr+
-            perI$Sow+
-            perI$Batch,
-        by="margin"))
-
-print(adonis2(hat_dis~
-            perI$Test_Nr+
-            perI$Sow+
-            perI$Batch,
-        by="margin"))
-
-print(adonis2(oft_dis~
-            perI$Test_Nr+
-            perI$Sow+
-            perI$Batch,
-        by="margin"))
-
-print(adonis2(npt_dis~
-            Perso_NPT$Test_Nr+
-            Perso_NPT$Sow+
-            Perso_NPT$Batch,
-        by="margin"))
-}
-
-################### using distance based ICC.
-dICC.SE.bt(as.matrix(bib_dis), strata=perI$ID, B=1000)
-dICC.SE.bt(as.matrix(oft_dis), strata=perI$ID, B=1000)
-dICC.SE.bt(as.matrix(hat_dis), strata=perI$ID, B=1000)
-dICC.SE.bt(as.matrix(npt_dis), strata=Perso_NPT$ID, B=1000)
-dICC.SE.bt(as.matrix(not_dis), strata=perI$ID, B=1000)
 
 ################# now we need to make some decisions,
 # NPT has missing data from animals of one batch and one time point
@@ -390,7 +455,6 @@ cor_Perso <- ggplot(data = m, aes(x = X, y = Y, fill = value)) +
           axis.text = element_text(size = 10),  # Adjust the size of axis text
           legend.text = element_text(size = 10),
           axis.text.x = element_text(angle = 45, hjust = 1)) 
-ggsave("fig/FigureS1.pdf", cor_Perso, width = 300, height = 220, dpi = 300, units="mm")
+#cor_Perso
 
-cor_Perso
 
