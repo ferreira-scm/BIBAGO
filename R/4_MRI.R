@@ -66,8 +66,4 @@ adonis2(bib_dis~
         strata=mriI$ID,
         by="margin") # no difference of test?
 
-adonis2(bib_dis~
-          mriI$PVC_Nr,
-        by="margin") # no difference of test?
-
 

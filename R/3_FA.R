@@ -53,6 +53,8 @@ BisBas_scores <- as.data.frame(BisBas_scores$scores)
 head(BisBas_scores)
 
 
+
+### Bonus ### for a different manuscript
 ################### laterality testing
 
 Perso.s <- as.data.frame(Perso.s)
@@ -127,7 +129,7 @@ Char4 <- plot_predictions(Lat.m, condition="PA1_s")+
 
 library(cowplot)
 
-Lat_Ten <- plot_grid(Char1, Char2, Char3, Char4)
+Lat_Ten <- plot_grid(Char1, Char3, Char4)
 
 ggsave("fig/Lat_tendencies.pdf", Lat_Ten, width = 180, height = 180, dpi = 300, units="mm")
 
@@ -165,7 +167,7 @@ Fig3D <- ggplot(latK, aes(Lat2, OFT_voc_freq, colour=Lat2))+
 
 library(cowplot)
 
-BC <- cowplot::plot_grid(Fig3B, Fig3C, Fig3D, labels=c("B", "C", "D"))
+BC <- cowplot::plot_grid(Fig3B, Fig3C, Fig3D, ncol=3, labels=c("B", "C", "D"))
 
-Fig3 <- cowplot::plot_grid(Fig3A, BC, ncol=1, labels=c("A", ""), rel_heights=c(2,1))
-ggsave("fig/Figure3.pdf", Fig3, width = 180, height = 180, dpi = 300, units="mm")
+#Fig3 <- cowplot::plot_grid(Fig3A, BC, ncol=1, labels=c("A", ""), rel_heights=c(2,1))
+#ggsave("fig/Figure3.pdf", Fig3, width = 180, height = 180, dpi = 300, units="mm")
