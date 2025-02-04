@@ -117,7 +117,10 @@ print(modularity(oc))
 
 head(centrality(results.12))
 
+pdf("fig/Centrality.pdf",
+                width =6, height = 6)
 centralityPlot(results.12, include = c("Degree","Strength","Betweenness", "Closeness"))
+dev.off()
 
 bootnet_case_dropping <- bootnet(results.12,
                                        nBoots = 2500,
@@ -128,5 +131,7 @@ bootnet_case_dropping <- bootnet(results.12,
                                                       'betweenness',
                                                       'closeness'))
 
+pdf("fig/Stability.pdf",
+                width =8, height = 4)
 plot(bootnet_case_dropping, 'all')
-
+dev.off()

@@ -273,35 +273,35 @@ npt_df <- as.data.frame(pca_NPT$x[,c(1,2)])
 npt_df$Time <- as.factor(Perso_NPT$Test_Nr)
 
 nptPCA <- ggplot(npt_df, aes(PC1, PC2, colour=Time))+
-    geom_point(size=2)+
+    geom_point(size=2, alpha=0.8)+
     stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
     scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
     scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
     theme_classic()
 
 bibPCA <- ggplot(pca_df, aes(bib1, bib2, colour=Time))+
-    geom_point(size=2)+
+    geom_point(size=2, alpha=0.8)+
     stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
     scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
     scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
     theme_classic()
 
 oftPCA <- ggplot(pca_df, aes(OFT1, OFT2, colour=Time))+
-    geom_point(size=2)+
+    geom_point(size=2, alpha=0.8)+
     stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
     scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
     scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
     theme_classic()
 
 hatPCA <- ggplot(pca_df, aes(HAT1, HAT2, colour=Time))+
-    geom_point(size=2)+
+    geom_point(size=2, alpha=0.8)+
     stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
     scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
     scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
     theme_classic()
 
 notPCA <- ggplot(pca_df, aes(NOT1, NOT2, colour=Time))+
-    geom_point(size=2)+
+    geom_point(size=2, alpha=0.8)+
     stat_ellipse(aes(group=Time, colour=Time),level=0.8)+
     scale_color_manual(values=c("#8ebec4", "#7e5f7a"))+
     scale_fill_manual(values=c("#8ebec4", "#7e5f7a"))+
@@ -310,7 +310,7 @@ notPCA <- ggplot(pca_df, aes(NOT1, NOT2, colour=Time))+
 library(cowplot)
 
 Fig_S2 <- plot_grid(bibPCA, nptPCA, hatPCA, notPCA, oftPCA, labels="auto")
-ggsave("fig/FigureS2.pdf", Fig_S2, width = 200, height = 200, dpi = 300, units="mm")
+ggsave("fig/FigureS2.pdf", Fig_S2, width = 220, height = 150, dpi = 300, units="mm")
 
 ################### using distance based ICC.
 dICC.SE.bt(as.matrix(bib_dis), strata=perI$ID, B=1000)
